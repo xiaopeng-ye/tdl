@@ -1,0 +1,1 @@
+Error Semántico: Los tipos de los parámetros no coinciden en la línea 31
