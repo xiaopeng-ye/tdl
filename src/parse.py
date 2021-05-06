@@ -3,6 +3,7 @@ from table import GestorTablaSimbolo
 from lexico import JSLexer, Token
 from semantic import JSSemantic
 from collections import deque
+from gci import JSGci
 import pandas as pd
 import sys
 
@@ -47,13 +48,14 @@ class JSParser:
         # inicializar todos los componentes
         gestor_ts = GestorTablaSimbolo()
         gestor_err = GestorError()
+        gci = JSGci()
         self.lexico = JSLexer(gestor_ts, gestor_err)
         tks = self.lexico.tokenize(path)
-        semantico = JSSemantic(self.lexico, gestor_ts, gestor_err)
         self.token_file = open('tokens.txt', 'w')
         lista_reglas = ['Descendente']
         # algoritmo del analizador sintactico
         pila = deque([Simbolo('$'), Simbolo('P')])
+        semantico = JSSemantic(self.lexico, gci, gestor_ts, gestor_err, pila)
         token = self.sig_tok(tks)
         x = pila[-1]
         while True:
@@ -76,6 +78,8 @@ class JSParser:
                     simbolo.linea = token.linea
                     if token.tipo == 'ID':
                         simbolo.pos = token.atributo
+                    elif token.tipo in ('ENTERO', 'CADENA'):
+                        simbolo.constante = token.atributo
                     semantico.pila_aux.append(simbolo)
                     linea = token.linea
                     token = self.sig_tok(tks)
@@ -118,8 +122,9 @@ class JSParser:
             # accion semantica
             else:
                 # print('ejecuta accion semantica')
-                eval('semantico.' + x.valor + '()')
                 pila.pop()
+                eval('semantico.' + x.valor + '()')
+                # pila.pop()
 
             x = pila[-1]
 

@@ -1,0 +1,283 @@
+P -> B P {}
+
+P -> F P {}
+
+P -> S P {}
+
+P -> lambda {}
+
+F -> function H ID ( A ) {
+	emite(BuscaEtiqTS(ID.pos), ':');
+}
+{ C }{
+	emite('return');
+}
+
+C -> B C1 {}
+
+C -> S C1 {}
+
+C -> lambda {}
+
+E -> R {
+	Y.lugar := R.lugar;
+} Y {
+	E.lugar := Y.lugar;
+}
+
+Y -> || R {
+	Y1.lugar := nuevatemp(logico);
+	emite(Y1.lugar. ':=', Y.lugar, 'or', R.lugar);
+} Y1 {
+	Y.lugar := Y1.lugar;
+}
+
+Y -> lambda {}
+
+R -> U {
+	I.lugar := U.lugar;
+} I {
+	R.lugar := I.lugar;
+}
+
+I -> && U {
+	I1.lugar := nuevatemp(logico);
+	emite(I1.lugar, ':=', I.lugar, 'and', U.lugar);
+} I1 {
+	I.lugar := I1.lugar;
+}
+
+
+I -> lambda {}
+
+U -> V {
+	O.lugar := V.lugar;
+} O {
+	U.lugar := O.lugar;
+}
+
+O -> != V {
+	O1.lugar := nuevatemp(logico);
+  	O.verdadero := nuevaetiq();
+  	O.despues := nuevaetiq();
+  	emite('if', O.lugar, '==', V.lugar, 'goto', O.verdadero);
+  	emite(O1.lugar, ':=', '0');
+  	emite('goto', O.despues);
+  	emite(O.verdadero, ':');
+  	emite(O1.lugar, ':=', '1');
+  	emite(O.despues, ':');
+} O1 {
+	O.lugar := O1.lugar;
+}
+
+O -> == V {
+	O1.lugar := nuevatemp(logico);
+  	O.verdadero := nuevaetiq();
+  	O.despues := nuevaetiq();
+  	emite('if', O.lugar, '!=', V.lugar, 'goto', O.verdadero);
+  	emite(G.lugar, ':=', '0');
+  	emite('goto', O.despues);
+  	emite(O.verdadero, ':');
+  	emite(G.lugar, ':=', '1');
+  	emite(O.despues, ':');
+} O1 {
+	O.lugar := O1.lugar;
+}
+
+
+O -> lambda {}
+
+V -> W {
+	J.lugar := W.lugar;
+} J {
+	V.lugar := J.lugar;
+}
+
+
+J -> + W {
+	J1.lugar := nuevatemp(entero);
+  	emite(J1.lugar, ':=', J.lugar, '+', W.lugar);
+} J1 {
+	J.lugar := J1.lugar;
+}
+
+J -> - W {
+	J1.lugar := nuevatemp(entero);
+  	emite(J1.lugar, ':=', J.lugar, '-', W.lugar);
+} J1 {
+	J.lugar := J1.lugar;
+}
+
+J -> lambda {}
+
+W -> ++ ID {
+	W.lugar := nuevaTemp(entero);
+    emite(W.lugar,':=', W.lugar, '+', '1');
+}
+
+W -> ( E ) {
+	W.lugar := E.lugar;
+}
+
+W -> ID D {
+	if(BuscarTipoTS(ID.pos) != función) then
+    	W.lugar := BuscaLugarTS(ID.pos);
+	else then
+    	W.lugar := nuevatemp(BuscaTipoRetornoTS(ID.pos));
+  		for i := 1 to D.long
+          	emite('param', D.lugares[i]);
+        emite(W.lugar, ':=', 'call', BuscaEtiqTS(ID.pos));
+}
+
+W -> ENTERO {
+	W.lugar := nuevatemp(entero);
+    emite(W.lugar,':=',ENTERO.valor);
+}
+
+W -> CADENA {
+	W.lugar := nuevatemp(cadena);
+    emite(W.lugar, ':=', CADENA.valor);
+}
+
+W -> true {
+	W.lugar := nuevatemp(logico);
+    emite(W.lugar, ':=', '1');
+}
+
+W -> false {
+	W.lugar := nuevatemp(logico);
+    emite(W.lugar, ':=', '0');
+}
+
+D -> ( L ) {
+	D.lugar := L.lugar;
+}
+
+D -> lambda {}
+
+B -> let T ID ; {
+	B.lugar := BusacaLugarTS(ID.pos);
+}
+
+B -> if ( E ) {
+	B.salida := nuevaetiq();
+  	emite('if', E.lugar, '=', '0', 'goto', B.salida);
+} S {
+	emite(B.salida, ':');
+}
+
+B -> for ( N ; E ; M ) { (OJOOOOO!!!)
+	B.inicio := nuevaetiq();
+	B.continuo := nuevaetiq();
+  	C.salida := B.siguiente;
+  	emite(B.inicio, ':');
+  	emite('if', E.lugar, '=', '0', 'goto', B.siguiente);
+  	B.siguiente := B.inicio;
+} { C } {
+	emite('goto', B.inicio);
+}
+
+N -> ID = E {
+    if(E.tipo in {logico, entero}) then
+	    emite(BuscaLugarTS(ID.pos), ':=', E.lugar);
+	else if(E.tipo == cadena) then
+	    emite(BuscaLugarTS(ID.pos), ':=cad', E.lugar);
+}
+
+N -> lambda {}
+
+M -> N {
+	M.lugar := N.lugar;
+}
+
+M -> ++ ID {
+	M.lugar := BuscaLugarTS(ID.pos);
+  	emite(M.lugar, ':=', M.lugar, '+', 1);
+}
+
+S -> ID {
+	G.lugar := BuscaLugarTS(ID.pos);
+} G ; {
+	if(BuscarTipoTS(ID.pos) == función) then
+  		for i := 1 to G.long
+          	emite('param', G.lugares[i]);
+        emite('call', BuscaEtiqTS(ID.pos));
+}
+
+S -> ++ ID ; {
+	S.lugar := BuscaLugarTS(ID.pos);
+  	emite(S.lugar, ':=', ID.valor, '+', 1);
+}
+
+G -> = E {
+	if(E.tipo in {logico, entero}) then
+	    emite(g.lugar, ':=', E.lugar);
+	else if(E.tipo == cadena) then
+	    emite(g.lugar, ':=cad', E.lugar);
+}
+
+G -> ( L )  {
+	G.lugares := L.lugares;
+    G.long := L.long;
+}
+
+S -> input ( ID ) ; {
+    if(BuscaTipoTS(ID.pos) == 'entero') then
+        emite('input(entero)', BuscarLugarTS(ID.pos));
+    else
+	    emite('input(cadena)', BuscarLugarTS(ID.pos));
+}
+
+S -> alert ( E ) ; {
+    if(e.tipo == 'entero') then
+        emite('alert(entero)', E.lugar);
+    else
+	    emite('alert(cadena)', E.lugar);
+}
+
+S -> return X ; {
+	emite('return', X.lugar);
+}
+
+X -> E {
+	X.lugar := E.lugar;
+}
+
+X -> lambda {}
+
+L -> E{
+	Q.lugares[0] := E.lugar;
+  	Q.long := 1;
+} Q {
+	L.lugares := Q.lugares;
+  	L.long := Q.long;
+}
+
+L -> lambda {}
+
+Q -> , E {
+	Q1.lugares := Q.lugares;
+  	Q1.lugares[Q.long] := E.lugar;
+  	Q1.long := Q.long + 1;
+} Q1 {
+    Q.lugares := Q1.lugares;
+    Q.long := Q1.long;
+}
+
+Q -> lambda {}
+
+H -> T {}
+
+H -> lambda {}
+
+T -> boolean {}
+
+T -> string {}
+
+T -> number {}
+
+A -> T ID K {}
+
+A -> lambda {}
+
+K -> , T ID K1 {}

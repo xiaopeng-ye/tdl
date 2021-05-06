@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from gci import Operando
 
 
 class GestorTablaSimbolo:
@@ -9,6 +10,8 @@ class GestorTablaSimbolo:
         self.actual = self.global_
         self.zona_decl = False
         self.indice = -1
+        self.num_etiq = 0
+        self.cast_tam = {'logico': 1, 'cadena': 255, 'entero': 1}
 
     def crea_tabla(self, indice):
         self.actual = TablaSimbolo(self.global_.get_simbolo(indice).lexema)
@@ -62,6 +65,22 @@ class GestorTablaSimbolo:
         simbolo = self.actual.get_simbolo(indice)
         return self.global_.get_simbolo(indice) if simbolo is None else simbolo
 
+    def nueva_temp(self, tipo):
+        self.indice += 1
+        simbolo = self.actual.insertar_temp(self.indice)
+        simbolo['tipo'] = tipo
+        simbolo['despl'] = self.actual.despl
+        self.actual.despl += self.cast_tam[tipo]
+        return Operando(2, simbolo['despl'], simbolo.lexema)
+
+    def nueva_etiq(self):
+        self.num_etiq += 1
+        etiq = 'etiq' + str(self.num_etiq)
+        return Operando(11, etiq, etiq)
+
+    def es_global(self, indice):
+        return self.actual.get_simbolo(indice) is None
+
     def imprime(self):
         with open('tabla_simbolos.txt', 'w') as f:
             for i, tabla in zip(range(1, len(self.lista_ts) + 1), self.lista_ts):
@@ -76,6 +95,7 @@ class TablaSimbolo:
         self.simbolos_dict = OrderedDict()
         self.simbolos_list = {}
         self.despl = 0
+        self.num_temp = 1
 
     @property
     def nombre(self):
@@ -85,6 +105,13 @@ class TablaSimbolo:
         simbolo = Simbolo(indice, lexema)
         self.simbolos_dict[lexema] = simbolo
         self.simbolos_list[indice] = simbolo
+
+    def insertar_temp(self, indice):
+        lexema = f't{self.num_temp}'
+        simbolo = Simbolo(indice, lexema)
+        self.simbolos_dict[lexema] = simbolo
+        self.simbolos_list[indice] = simbolo
+        return simbolo
 
     def posicion_lexema(self, lexema):
         return self.simbolos_dict[lexema].indice if lexema in self.simbolos_dict else None
