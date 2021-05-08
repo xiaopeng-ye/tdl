@@ -104,8 +104,9 @@ class JSSemantic:
         c.ret = 'vacio'
 
     def regla_E1(self):  # E -> R
-        y = self.pila[-1]
         r = self.pila_aux[-1]
+        y = self.pila[-1]
+
         y.lugar = r.lugar
 
     def regla_E2(self):  # E -> R Y
@@ -220,7 +221,7 @@ class JSSemantic:
         o1.lugar = self.gestor_ts.nueva_temp('logico')
         o.verdadero = self.gestor_ts.nueva_etiq()
         o.despues = self.gestor_ts.nueva_etiq()
-        self.gci.emite('goto' + comparacion.valor, operando_a=o.lugar, operando_b=v.valor, resultado=o.verdadero)
+        self.gci.emite('goto' + comparacion.valor, operando_a=o.lugar, operando_b=v.lugar, resultado=o.verdadero)
         self.gci.emite(':=', operando_a=Operando(7, '0', '0'), resultado=o1.lugar)
         self.gci.emite('goto', resultado=o.despues)
         self.gci.emite(':', operando_a=o.verdadero)
@@ -327,7 +328,7 @@ class JSSemantic:
                                         f"El identificador '{id_simbolo.lexema}' corresponde a una variable",
                                         id_.linea)  # 213
 
-            w.lugar = Operando(self.codigo_variable(id.pos), id_simbolo['despl'], id_simbolo.lexema)
+            w.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
 
         else:
             if id_simbolo['tipoParam'] == d.tipo:
@@ -344,7 +345,7 @@ class JSSemantic:
             w.lugar = self.gestor_ts.nueva_temp(id_simbolo['tipoRetorno'])
             for lugar in d.lugares:
                 self.gci.emite('param', operando_a=lugar)
-            self.gci.emite('call', operando_a=id_simbolo['etiqFuncion'])
+            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
 
     def regla_W4(self):  # W-> entero
         entero = self.pila_aux.pop()
@@ -378,7 +379,7 @@ class JSSemantic:
         d = self.pila_aux[-1]
         d.tipo = ll.tipo
 
-        d.lugar = ll.lugar
+        d.lugares = ll.lugares
 
     def regla_D1(self):  # D -> lambda
         d = self.pila_aux[-1]
@@ -398,7 +399,7 @@ class JSSemantic:
         b.ret = 'vacio'
 
         id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
-        b.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_.lexema)
+        b.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
 
     def regla_B1_3(self):  # B -> let T ID
         self.gestor_ts.zona_decl = False
@@ -433,11 +434,9 @@ class JSSemantic:
         c = self.pila[-2]
 
         b.inicio = self.gestor_ts.nueva_etiq()
-        b.continuo = self.gestor_ts.nueva_etiq()
-        c.salida = b.siguiente
+        b.salida = self.gestor_ts.nueva_etiq()
         self.gci.emite(':', operando_a=b.inicio)
-        self.gci.emite('goto==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.siguiente)
-        b.siguiente = b.inicio
+        self.gci.emite('goto==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
 
     def regla_B3_2(self):  # B -> for ( N ; E ; M ) { C }
         self.pila_aux.pop()
@@ -461,6 +460,7 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'Expresión no válida', for_.linea)  # 215
 
         self.gci.emite('goto', resultado=b.inicio)
+        self.gci.emite(':', operando_a=b.salida)
 
     def regla_N1(self):  # N -> ID = E
         e = self.pila_aux.pop()
@@ -528,7 +528,7 @@ class JSSemantic:
 
             for lugar in g.lugares:
                 self.gci.emite('param', operando_a=lugar)
-            self.gci.emite('call', operando_a=id_simbolo['etiqFuncion'])
+            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
 
         elif id_simbolo['tipo'] == g.tipo:
             s.tipo = 'ok'
@@ -616,7 +616,7 @@ class JSSemantic:
         s.tipo = 'ok'
         s.ret = x.tipo
 
-        self.gci.emite('return', resultado=x.lugar)
+        self.gci.emite('return', resultado=x.lugar if hasattr(x, 'lugar') else None)
 
     def regla_X(self):  # X -> E
         e = self.pila_aux.pop()

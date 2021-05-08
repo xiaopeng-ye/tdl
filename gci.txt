@@ -150,7 +150,7 @@ W -> false {
 }
 
 D -> ( L ) {
-	D.lugar := L.lugar;
+	D.lugares := L.lugarares;
 }
 
 D -> lambda {}
@@ -168,13 +168,12 @@ B -> if ( E ) {
 
 B -> for ( N ; E ; M ) { (OJOOOOO!!!)
 	B.inicio := nuevaetiq();
-	B.continuo := nuevaetiq();
-  	C.salida := B.siguiente;
+  	B.salida := nuevaetiq();
   	emite(B.inicio, ':');
-  	emite('if', E.lugar, '=', '0', 'goto', B.siguiente);
-  	B.siguiente := B.inicio;
+  	emite('if', E.lugar, '=', '0', 'goto', B.salida);
 } { C } {
 	emite('goto', B.inicio);
+	emite(B.salida, ':')
 }
 
 N -> ID = E {
@@ -236,7 +235,10 @@ S -> alert ( E ) ; {
 }
 
 S -> return X ; {
-	emite('return', X.lugar);
+	if(X.lugar != null) then //cambiar
+	    emite('return', X.lugar);
+	else
+	    emite('return');
 }
 
 X -> E {

@@ -17,8 +17,8 @@ O -> != V regla_O1 O regla_O2
 O -> == V regla_O1 O regla_O2
 O -> lambda regla_lambda
 V -> W regla_V1 J regla_V2
-J -> + W J regla_J
-J -> - W J regla_J
+J -> + W regla_J1 J regla_J2
+J -> - W regla_J1 J regla_J2
 J -> lambda regla_lambda
 W -> ++ ID regla_W1
 W -> ( E ) regla_W2
