@@ -185,13 +185,10 @@ N -> ID = E {
 
 N -> lambda {}
 
-M -> N {
-	M.lugar := N.lugar;
-}
+M -> N {}
 
 M -> ++ ID {
-	M.lugar := BuscaLugarTS(ID.pos);
-  	emite(M.lugar, ':=', M.lugar, '+', 1);
+  	emite(BuscaLugarTS(ID.pos), ':=', M.lugar, '+', 1);
 }
 
 S -> ID {

@@ -1,46 +1,40 @@
-// No se debe cambiar el ejemplo hasta que lo indique el profesor
 let string s;
-let number a;
-let boolean bb;
-bb= 9 == 8 + 3;
-
-function number RR (number n, boolean b)
+let number    uno;
+let number    UNO;
+function number Factorial (number n)
 {
-	let boolean log;
-	log= n != n ;
-	input (kk);
-	if (b && log)	return 22;
-	return n + RR (n - 1, bb);	
+	let number i;
+	let number factorial;
+	for (i = 1; i != n; n=i)
+	{
+		factorial = factorial-i;
+	}
+	return factorial;
 }
+let number For;
+let number functional;
+let number While;
 
-let string s_s;
-kk=8888;
-
-function print (string s, number RR)
+function print (string s, string msg, number f)
 {
-	let boolean s_s;
-	alert(s);
-	alert('hola');
-	alert(2 + 3);
-	alert(RR);
-	input (kk);
-	alert (4 - a - 987 + (8 +3));
+	alert (s); alert (msg); alert (f);
 	return;
 }
-
-RR = 1;
-
-function string cadena (string kk)
+function string cadena (boolean log)
 {
-	if (bb) return kk;
-	for (;a != 9 || bb;++a)
-	{print ('{9}', RR(9, bb));
-	if (bb) return;
+	for (uno=1;log;)
+	{
+		print (s, 'hola', 33);
+		if (uno != UNO)	return s;
 	}
-	return 'dssdfa';
 }
+s = 'El factorial ';
 
-s_s = 'Hellooooooooooooooooooooooooooooooooooooooooooooooooo';
-a= RR (5, bb);
-print ('', 0);
-
+alert (s);
+alert ('Introduce un numero.');
+input (num);
+let
+boolean
+booleano;
+if (num == 0)		alert ('No existe el factorial de un negativo.');
+print (cadena (false), 'recursivo es: ', Factorial (num));

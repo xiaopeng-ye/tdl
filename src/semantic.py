@@ -487,8 +487,6 @@ class JSSemantic:
         m = self.pila_aux[-1]
         m.tipo = n.tipo
 
-        m.lugar = n.lugar
-
     def regla_M2(self):  # M -> ++ ID
         id_ = self.pila_aux.pop()
         elem = self.pila_aux.pop()
@@ -502,8 +500,8 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'Solo se puede auto incrementar variables de tipo entero',
                                     elem.linea)  # 210
 
-        m.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
-        self.gci.emite('+', operando_a=m.lugar, operando_b=Operando(7, '1', '1'), resultado=m.lugar)
+        self.gci.emite('+', operando_a=m.lugar, operando_b=Operando(7, '1', '1'),
+                       resultado=Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema))
 
     def regla_S1_1(self):  # S -> ID
         id_ = self.pila_aux[-1]
