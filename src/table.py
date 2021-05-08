@@ -11,7 +11,7 @@ class GestorTablaSimbolo:
         self.zona_decl = False
         self.indice = -1
         self.num_etiq = 0
-        self.cast_tam = {'logico': 1, 'cadena': 255, 'entero': 1}
+        self.cast_tam = {'logico': 1, 'cadena': 64, 'entero': 1}
 
     def crea_tabla(self, indice):
         self.actual = TablaSimbolo(self.global_.get_simbolo(indice).lexema)
@@ -107,7 +107,8 @@ class TablaSimbolo:
         self.simbolos_list[indice] = simbolo
 
     def insertar_temp(self, indice):
-        lexema = f't{self.num_temp}'
+        lexema = f'~temp{self.num_temp}'
+        self.num_temp += 1
         simbolo = Simbolo(indice, lexema)
         self.simbolos_dict[lexema] = simbolo
         self.simbolos_list[indice] = simbolo
