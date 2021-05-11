@@ -129,6 +129,7 @@ class JSSemantic:
         y1 = self.pila[-1]
 
         y1.lugar = self.gestor_ts.nueva_temp('logico')
+        self.gci.emite('or', operando_a=y.lugar, operando_b=r.lugar, resultado=y1.lugar)
 
     def regla_Y2(self):  # Y -> || R Y1
         y1 = self.pila_aux.pop()
@@ -144,7 +145,6 @@ class JSSemantic:
                                     "Se esperaba un tipo lógico de los operandos del operador '||'",
                                     operador.linea)  # 203
 
-        self.gci.emite('or', operando_a=y.lugar, operando_b=r.lugar, resultado=y1.lugar)
         y.lugar = y1.lugar
 
     def regla_R1(self):  # R -> U
@@ -173,6 +173,7 @@ class JSSemantic:
         i1 = self.pila[-1]
 
         i1.lugar = self.gestor_ts.nueva_temp('logico')
+        self.gci.emite('and', operando_a=i.lugar, operando_b=u.lugar, resultado=i1.lugar)
 
     def regla_I2(self):  # I -> && U I1
         i1 = self.pila_aux.pop()
@@ -187,7 +188,6 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico',
                                     "Se esperaba un tipo lógico de los operandos del operador '&&'", and_.linea)  # 205
 
-        self.gci.emite('and', operando_a=i.lugar, operando_b=u.lugar, resultado=i1.lugar)
         i.lugar = i1.lugar
 
     def regla_U1(self):  # U -> V
@@ -273,6 +273,7 @@ class JSSemantic:
         j1 = self.pila[-1]
 
         j1.lugar = self.gestor_ts.nueva_temp('entero')
+        self.gci.emite(operador.valor, operando_a=j.lugar, operando_b=w.lugar, resultado=j1.lugar)
 
     def regla_J2(self):  # J -> + W J1  y J -> - W J1
         j1 = self.pila_aux.pop()
@@ -288,7 +289,6 @@ class JSSemantic:
                                     'Se esperaba un tipo entero de los operandos del operador aritmético',
                                     operador.linea)  # 209
 
-        self.gci.emite(operador.valor, operando_a=j.lugar, operando_b=w.lugar, resultado=j1.lugar)
         j.lugar = j1.lugar
 
     def regla_W1(self):  # W -> ++ ID
