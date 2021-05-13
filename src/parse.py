@@ -49,7 +49,7 @@ class JSParser:
         gestor_ts = GestorTablaSimbolo()
         gestor_err = GestorError()
         gci = JSGci()
-        self.lexico = JSLexer(gestor_ts, gestor_err)
+        self.lexico = JSLexer(gci, gestor_ts, gestor_err)
         tks = self.lexico.tokenize(path)
         self.token_file = open('tokens.txt', 'w')
         lista_reglas = ['Descendente']

@@ -402,6 +402,10 @@ class JSSemantic:
 
         id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
         b.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
+        if t.tipo == 'cadena':
+            self.gci.emite(':=cad', operando_a=Operando(9, "''", "''"), resultado=b.lugar)
+        else:
+            self.gci.emite(':=', operando_a=Operando(7, '0', '0'), resultado=b.lugar)
 
     def regla_B1_3(self):  # B -> let T ID
         self.gestor_ts.zona_decl = False

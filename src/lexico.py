@@ -2,13 +2,15 @@ import pandas as pd
 from error import GestorError
 from table import GestorTablaSimbolo
 from util import resource_path
+from gci import Operando
 
 
 class JSLexer:
 
-    def __init__(self, gestor_ts, gestor_err):
+    def __init__(self, gci, gestor_ts, gestor_err):
         self.code_file = None
         self.linea = None
+        self.gci = gci
         self.gestor_ts = gestor_ts
         self.gestor_err = gestor_err
         self.tabla = pd.read_csv(resource_path('config/lexico_tabla.csv'), index_col=0, dtype=str)
@@ -80,6 +82,9 @@ class JSLexer:
                             if indice is None:
                                 indice = self.gestor_ts.inserta_ts_global(lexema)
                                 self.gestor_ts.aniadir_var_atributos_ts_global(indice, 'entero', 1)
+                                id_simbolo = self.gestor_ts.buscar_simbolo_ts(indice)
+                                self.gci.emite(':=', operando_a=Operando(7, '0', '0'),
+                                               resultado=Operando(1, id_simbolo['despl'], id_simbolo.lexema))
                         yield Token('IDENTIFICADOR', indice, self.linea)
 
                 elif accion == 'E':

@@ -157,6 +157,10 @@ D -> lambda {}
 
 B -> let T ID ; {
 	B.lugar := BusacaLugarTS(ID.pos);
+	if (t.tipo == 'cadena') then
+	    emite(B.lugar, ':=cad', '');
+	else
+	    emite(B.lugar, ':=', 0);
 }
 
 B -> if ( E ) {
