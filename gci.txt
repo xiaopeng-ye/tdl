@@ -111,7 +111,7 @@ J -> - W {
 J -> lambda {}
 
 W -> ++ ID {
-	W.lugar := nuevaTemp(entero);
+	W.lugar := BuscarLugarTS(ID.pos)
     emite(W.lugar,':=', W.lugar, '+', '1');
 }
 
@@ -192,6 +192,7 @@ N -> lambda {}
 M -> N {}
 
 M -> ++ ID {
+    M.lugar = BuscaLugarTS(ID.pos);
   	emite(BuscaLugarTS(ID.pos), ':=', M.lugar, '+', 1);
 }
 

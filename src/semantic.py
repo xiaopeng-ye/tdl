@@ -129,7 +129,6 @@ class JSSemantic:
         y1 = self.pila[-1]
 
         y1.lugar = self.gestor_ts.nueva_temp('logico')
-        self.gci.emite('or', operando_a=y.lugar, operando_b=r.lugar, resultado=y1.lugar)
 
     def regla_Y2(self):  # Y -> || R Y1
         y1 = self.pila_aux.pop()
@@ -145,6 +144,7 @@ class JSSemantic:
                                     "Se esperaba un tipo lógico de los operandos del operador '||'",
                                     operador.linea)  # 203
 
+        self.gci.emite('or', operando_a=y.lugar, operando_b=r.lugar, resultado=y1.lugar)
         y.lugar = y1.lugar
 
     def regla_R1(self):  # R -> U
@@ -173,7 +173,6 @@ class JSSemantic:
         i1 = self.pila[-1]
 
         i1.lugar = self.gestor_ts.nueva_temp('logico')
-        self.gci.emite('and', operando_a=i.lugar, operando_b=u.lugar, resultado=i1.lugar)
 
     def regla_I2(self):  # I -> && U I1
         i1 = self.pila_aux.pop()
@@ -188,6 +187,7 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico',
                                     "Se esperaba un tipo lógico de los operandos del operador '&&'", and_.linea)  # 205
 
+        self.gci.emite('and', operando_a=i.lugar, operando_b=u.lugar, resultado=i1.lugar)
         i.lugar = i1.lugar
 
     def regla_U1(self):  # U -> V
@@ -273,7 +273,6 @@ class JSSemantic:
         j1 = self.pila[-1]
 
         j1.lugar = self.gestor_ts.nueva_temp('entero')
-        self.gci.emite(operador.valor, operando_a=j.lugar, operando_b=w.lugar, resultado=j1.lugar)
 
     def regla_J2(self):  # J -> + W J1  y J -> - W J1
         j1 = self.pila_aux.pop()
@@ -289,20 +288,22 @@ class JSSemantic:
                                     'Se esperaba un tipo entero de los operandos del operador aritmético',
                                     operador.linea)  # 209
 
+        self.gci.emite(operador.valor, operando_a=j.lugar, operando_b=w.lugar, resultado=j1.lugar)
         j.lugar = j1.lugar
 
     def regla_W1(self):  # W -> ++ ID
         id_ = self.pila_aux.pop()
         self.pila_aux.pop()
         w = self.pila_aux[-1]
-        if self.gestor_ts.buscar_simbolo_ts(id_.pos)['tipo'] == 'entero':
+        id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
+        if id_simbolo['tipo'] == 'entero':
             w.tipo = 'entero'
         else:
             w.tipo = 'error'
             self.gestor_err.imprime('Semántico',
                                     'Solo se puede auto incrementar variables de tipo entero', id_.linea)  # 210
 
-        w.lugar = self.gestor_ts.nueva_temp('entero')
+        w.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
         self.gci.emite('+', operando_a=w.lugar, operando_b=Operando(7, '1', '1'), resultado=w.lugar)
 
     def regla_W2(self):  # W -> ( E )
@@ -346,8 +347,7 @@ class JSSemantic:
             w.lugar = self.gestor_ts.nueva_temp(id_simbolo['tipoRetorno'])
             for lugar in d.lugares:
                 self.gci.emite('param', operando_a=lugar)
-            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']),
-                           resultado=w.lugar)
+            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
 
     def regla_W4(self):  # W-> entero
         entero = self.pila_aux.pop()
@@ -402,10 +402,6 @@ class JSSemantic:
 
         id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
         b.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
-        if t.tipo == 'cadena':
-            self.gci.emite(':=cad', operando_a=Operando(9, "''", "''"), resultado=b.lugar)
-        else:
-            self.gci.emite(':=', operando_a=Operando(7, '0', '0'), resultado=b.lugar)
 
     def regla_B1_3(self):  # B -> let T ID
         self.gestor_ts.zona_decl = False
@@ -506,6 +502,7 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'Solo se puede auto incrementar variables de tipo entero',
                                     elem.linea)  # 210
 
+        m.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
         self.gci.emite('+', operando_a=m.lugar, operando_b=Operando(7, '1', '1'),
                        resultado=Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema))
 
