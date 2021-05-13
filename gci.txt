@@ -257,7 +257,9 @@ L -> E{
   	L.long := Q.long;
 }
 
-L -> lambda {}
+L -> lambda {
+    L.lugares := {}; // lista vacia
+}
 
 Q -> , E {
 	Q1.lugares := Q.lugares;

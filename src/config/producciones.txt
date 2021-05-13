@@ -46,7 +46,7 @@ S -> return X ; regla_S5
 X -> E regla_X
 X -> lambda regla_lambda
 L -> E regla_L1 Q regla_L2
-L -> lambda regla_lambda
+L -> lambda regla_L3
 Q -> , E regla_Q1 Q regla_Q2
 Q -> lambda regla_lambda
 H -> T regla_H

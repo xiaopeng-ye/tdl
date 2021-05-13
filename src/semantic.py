@@ -347,7 +347,8 @@ class JSSemantic:
             w.lugar = self.gestor_ts.nueva_temp(id_simbolo['tipoRetorno'])
             for lugar in d.lugares:
                 self.gci.emite('param', operando_a=lugar)
-            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
+            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']),
+                           resultado=w.lugar)
 
     def regla_W4(self):  # W-> entero
         entero = self.pila_aux.pop()
@@ -643,6 +644,11 @@ class JSSemantic:
             ll.tipo = e.tipo + ' ' + q.tipo
 
         ll.lugares = q.lugares
+
+    def regla_L3(self):  # L -> lambda
+        ll = self.pila_aux[-1]
+        ll.tipo = 'vacio'
+        ll.lugares = list()
 
     def regla_Q1(self):  # Q -> , E
         e = self.pila_aux[-1]
