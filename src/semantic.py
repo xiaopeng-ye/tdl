@@ -345,8 +345,8 @@ class JSSemantic:
                 self.gestor_err.imprime('Semántico', 'Los tipos de los parámetros no coinciden', id_.linea)  # 212
 
             w.lugar = self.gestor_ts.nueva_temp(id_simbolo['tipoRetorno'])
-            for lugar in d.lugares:
-                self.gci.emite('param', operando_a=lugar)
+            for lugar, tipo in zip(d.lugares, id_simbolo['tipoParam'].split(' ')):
+                self.gci.emite(u'param{cad}'.format(cad='(cad)' if tipo == 'cadena' else ''), operando_a=lugar)
             self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']),
                            resultado=w.lugar)
 
@@ -528,8 +528,8 @@ class JSSemantic:
                 s.tipo = 'error'
                 self.gestor_err.imprime('Semántico', 'Los tipos de los parámetros no coinciden', id_.linea)  # 212
 
-            for lugar in g.lugares:
-                self.gci.emite('param', operando_a=lugar)
+            for lugar, tipo in zip(g.lugares, id_simbolo['tipoParam'].split(' ')):
+                self.gci.emite(u'param{cad}'.format(cad='(cad)' if tipo == 'cadena' else ''), operando_a=lugar)
             self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
 
         elif id_simbolo['tipo'] == g.tipo:
@@ -618,7 +618,8 @@ class JSSemantic:
         s.tipo = 'ok'
         s.ret = x.tipo
 
-        self.gci.emite('return', resultado=x.lugar if hasattr(x, 'lugar') else None)
+        self.gci.emite(u'return{cad}'.format(cad='(cad)' if x.tipo == 'cadena' else ''),
+                       resultado=x.lugar if hasattr(x, 'lugar') else None)
 
     def regla_X(self):  # X -> E
         e = self.pila_aux.pop()
