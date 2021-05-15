@@ -4,9 +4,10 @@ from gci import Operando
 
 class JSSemantic:
 
-    def __init__(self, lexico, gci, gestor_ts, gestor_err, pila):
+    def __init__(self, lexico, gci, gco, gestor_ts, gestor_err, pila):
         self.lexico = lexico
         self.gci = gci
+        self.gco = gco
         self.gestor_ts = gestor_ts
         self.gestor_err = gestor_err
         self.pila = pila
@@ -29,6 +30,7 @@ class JSSemantic:
 
     def regla_F1(self):  # F -> function
         self.gestor_ts.zona_decl = True
+        self.gco.es_codigo_main = False
 
     def regla_F2(self):  # F -> function H ID
         id_ = self.pila_aux[-1]
@@ -61,6 +63,7 @@ class JSSemantic:
 
     def regla_F5(self):  # F -> function H ID ( A ) { C }
         self.gci.emite('return')
+        self.gco.es_codigo_main = True
 
         self.pila_aux.pop()
         self.pila_aux.pop()

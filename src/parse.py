@@ -3,6 +3,7 @@ from table import GestorTablaSimbolo
 from lexico import JSLexer, Token
 from semantic import JSSemantic
 from collections import deque
+from gco import JSGco
 from gci import JSGci
 import pandas as pd
 import sys
@@ -49,13 +50,14 @@ class JSParser:
         gestor_ts = GestorTablaSimbolo()
         gestor_err = GestorError()
         gci = JSGci()
+        gco = JSGco(gestor_ts)
         self.lexico = JSLexer(gci, gestor_ts, gestor_err)
         tks = self.lexico.tokenize(path)
         self.token_file = open('tokens.txt', 'w')
         lista_reglas = ['Descendente']
         # algoritmo del analizador sintactico
         pila = deque([Simbolo('$'), Simbolo('P')])
-        semantico = JSSemantic(self.lexico, gci, gestor_ts, gestor_err, pila)
+        semantico = JSSemantic(self.lexico, gci, gco, gestor_ts, gestor_err, pila)
         token = self.sig_tok(tks)
         x = pila[-1]
         while True:
@@ -144,6 +146,8 @@ class JSParser:
             f.write(' '.join(lista_reglas))
         gestor_ts.imprime()
         self.token_file.close()
+        # terminar de implementar el codigo objeto
+        gco.finalizar()
 
 
 class Simbolo:
