@@ -49,8 +49,8 @@ class JSParser:
         # inicializar todos los componentes
         gestor_ts = GestorTablaSimbolo()
         gestor_err = GestorError()
-        gci = JSGci()
         gco = JSGco(gestor_ts)
+        gci = JSGci(gco)
         self.lexico = JSLexer(gci, gestor_ts, gestor_err)
         tks = self.lexico.tokenize(path)
         self.token_file = open('tokens.txt', 'w')

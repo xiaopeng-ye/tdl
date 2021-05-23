@@ -52,7 +52,7 @@ class GestorTablaSimbolo:
     def aniadir_func_atributos_ts(self, indice, tipo_param, tipo_retorno):
         simbolo = self.global_.get_simbolo(indice)
         simbolo['tipo'] = 'funcion'
-        simbolo['etiqFuncion'] = simbolo.lexema
+        simbolo['etiqFuncion'] = f"fun_{simbolo.lexema}"
         simbolo['tipoRetorno'] = tipo_retorno
 
         if tipo_param != 'vacio':

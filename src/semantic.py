@@ -350,7 +350,8 @@ class JSSemantic:
             w.lugar = self.gestor_ts.nueva_temp(id_simbolo['tipoRetorno'])
             for lugar, tipo in zip(d.lugares, id_simbolo['tipoParam'].split(' ')):
                 self.gci.emite(u'param{cad}'.format(cad='(cad)' if tipo == 'cadena' else ''), operando_a=lugar)
-            self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']),
+            self.gci.emite(u'call{cad}'.format(cad='(cad)' if id_simbolo['tipoRetorno'] == 'cadena' else ''),
+                           operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']),
                            resultado=w.lugar)
 
     def regla_W4(self):  # W-> entero
@@ -367,7 +368,7 @@ class JSSemantic:
         w.tipo = 'cadena'
 
         w.lugar = self.gestor_ts.nueva_temp('cadena')
-        self.gci.emite(':=cad', operando_a=Operando(7, cadena.constante, cadena.constante), resultado=w.lugar)
+        self.gci.emite(':=cad', operando_a=Operando(9, cadena.constante, cadena.constante), resultado=w.lugar)
 
     def regla_W6(self):  # W -> true | W -> false
         logico = self.pila_aux.pop()
