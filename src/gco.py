@@ -144,8 +144,7 @@ class JSGco:
         etiq_cadena = self.expresion_operando(operando_a)
         etiq_bucle = self.etiqueta_bucle()
         registro_destino = ".IX" if resultado.cod_operando != 1 else ".IY"
-        inst = None
-
+        inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Inicio de asignacion de cadena".ljust(20, " "))]
         if operando_a.cod_operando != 9:
             registro_origen = ".IX" if operando_a.cod_operando != 1 else ".IY"
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -194,7 +193,7 @@ class JSGco:
                                     st=f"ADD #{operando_a.lugar}, {registro}".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R8".ljust(20, " ")),
             # bucle copia cadena
-            u"{etiq}{st}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " ")),
+            u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " "),comen=f"; Bucle de copia de cadena".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R9".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R8".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"CMP #0, [.R9]".ljust(20, " ")),
@@ -219,15 +218,14 @@ class JSGco:
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /{etiq_funcion}".ljust(20, " "))]
         if resultado is not None:
             destino = self.expresion_operando(resultado)
-            inst.append(u"{etiq}{st}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
-                                                st=f"SUB #tam_ra_{llamador}, #1".ljust(20, " ")))
-
+            inst.append(u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
+                                                st=f"SUB #tam_ra_{llamador}, #1".ljust(20, " "), comen=f"; Etiqueta de retorno".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, .IX".ljust(20, " ")))
-            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE [.A], .R9".ljust(20, " ")))
+            inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE [.A], .R9".ljust(20, " "),comen=f"; Valor devuelto en R9".ljust(20, " ")))
             inst.append(
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"SUB .IX, #tam_ra_{llamador}".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .IX".ljust(20, " ")))
-            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .R9, {destino}".ljust(20, " ")))
+            inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE .R9, {destino}".ljust(20, " "),comen=f"; Valor devuelto en el dato temporal correspondiente".ljust(20, " ")))
 
         else:
             inst.append(u"{etiq}{st}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
@@ -253,13 +251,13 @@ class JSGco:
                 u"{etiq}{st}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
                                         st=f"SUB #tam_ra_{llamador}, #64".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, .IX".ljust(20, " ")),
-                u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE [.A], .R9".ljust(20, " ")),
+                u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE [.A], .R9".ljust(20, " "),comen=f"; Valor devuelto en R9".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"SUB .IX, #tam_ra_{llamador}".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .IX".ljust(20, " ")),
 
                 # bucle copia cadena
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                        st=f"ADD #{resultado.lugar}, {registro}".ljust(20, " ")),
+                                        st=f"ADD #{resultado.lugar}, {registro}".ljust(20, " "),comen=f"; Bucle de copia de cadena".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R8".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R9".ljust(20, " ")),
@@ -291,7 +289,7 @@ class JSGco:
                                     st=f"SUB #tam_ra_{self.gestor_ts.actual.nombre}, #64".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R8".ljust(20, " ")),
             # bucle copia cadena
-            u"{etiq}{st}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " ")),
+            u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " "), comen=f"; Bucle de copia de cadena".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R9".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R8".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"CMP #0, [.R9]".ljust(20, " ")),
@@ -313,8 +311,10 @@ class JSGco:
 
     def input_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ININT {a}".ljust(20, " "))
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"input entero".ljust(20, " ")),
+            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ININT {a}".ljust(20, " ")))
 
     def input_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INSTR {a}".ljust(20, " "))
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"alert cadena".ljust(20, " ")),
+            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INSTR {a}".ljust(20, " ")))
