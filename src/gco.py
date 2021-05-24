@@ -46,9 +46,9 @@ class JSGco:
         self.main_file.seek(0)
         # cabezera del codigo ensamblador
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ORG 0".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_de".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #BR /fun_global".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_de, .IY".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila .IX".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /fun_global".ljust(20, " ")))
 
         gco_file.write("\n;------------Codigos de las funciones------------\n")
         gco_file.writelines(self.funciones_file.readlines())
@@ -124,7 +124,7 @@ class JSGco:
         if lugar == 9:  # constante cadena
             return f"#{self.etiqueta_cadena(operando.lugar)}"
         if lugar == 11:  # etiqueta
-            return f"#{operando.lugar}"
+            return f"{operando.lugar}"
 
     def operacion(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
