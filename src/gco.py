@@ -14,7 +14,7 @@ class JSGco:
         self.bucle_count = 0
         self.dir_ret_count = 0
         self.gestor_dir_ret = OrderedDict()
-        self.gestor_bucle = OrderedDict()
+        self.dir_ret_count = 0
         self._cast_cuarteto = {
             '+': self.operacion,
             '-': self.operacion,

@@ -78,6 +78,16 @@ class GestorTablaSimbolo:
         etiq = 'etiq' + str(self.num_etiq)
         return Operando(11, etiq, etiq)
 
+    def tamanio_ra_global(self):
+        return self.global_.despl
+
+    def tamanio_ra(self, tabla):
+        if tabla.nombre == 'global':
+            return self.global_.despl
+        simbolo = self.global_.simbolos_dict[tabla.nombre]
+        tam_param = sum([self.cast_tam[param] for param in simbolo['tipoParam'].split(' ')])
+        return 1 + tam_param + tabla.despl + self.cast_tam[simbolo['tipoRetorno']]
+
     def es_global(self, indice):
         return self.actual.get_simbolo(indice) is None
 
