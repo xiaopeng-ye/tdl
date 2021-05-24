@@ -148,9 +148,9 @@ class JSGco:
 
         if operando_a.cod_operando != 9:
             registro_origen = ".IX" if operando_a.cod_operando != 1 else ".IY"
-            inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                            st=f"ADD #{operando_a.lugar}, {registro_origen}".ljust(20, " ")),
-                    u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R9".ljust(20, " "))]
+            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                            st=f"ADD #{operando_a.lugar}, {registro_origen}".ljust(20, " ")))
+            inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R9".ljust(20, " "), comen=f"; Copia la dir de cadena en R9".ljust(20, " ")))
         else:
             inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {etiq_cadena}, .R9".ljust(20, " "))]
 
