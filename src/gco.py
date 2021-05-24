@@ -46,9 +46,9 @@ class JSGco:
         self.main_file.seek(0)
         # cabezera del codigo ensamblador
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ORG 0".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_de".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #BR /fun_global".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_de, .IY".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila .IX".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /fun_global".ljust(20, " ")))
 
         gco_file.write("\n;------------Codigos de las funciones------------\n")
         gco_file.writelines(self.funciones_file.readlines())
@@ -58,21 +58,21 @@ class JSGco:
         gco_file.writelines(self.main_file.readlines())
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"HALT".ljust(20, " ")))
 
-        gco_file.write("\n;------------Datos globales-----------\n")
-        gco_file.write(u"{etiq}{st}\n".format(etiq="inicio_de:".ljust(20, " "),
-                                               st=f"RES {self.gestor_ts.tamanio_ra_global()}".ljust(20, " ")))
-
         gco_file.write("\n;------------Tamanio RA de las funciones----------\n")
         # gco_file.write(u"{etiq}{st}\n".format(etiq="tam_ra_global:".ljust(20, " "),
         #                                        st=f"EQU {self.gestor_ts.tamanio_ra_global()}".ljust(20, " ")))
         for tabla in self.gestor_ts.lista_ts:
-            gco_file.write(u"{etiq}{st}\n".format(etiq=f"tam_ra_{tabla.nombre}".ljust(20, " "),
+            gco_file.write(u"{etiq}{st}\n".format(etiq=f"tam_ra_{tabla.nombre}:".ljust(20, " "),
                                                    st=f"EQU {self.gestor_ts.tamanio_ra(tabla)}".ljust(20, " ")))
 
         gco_file.write("\n;------------Cadenas usadas del programa-----------\n")
         for cadena, etiq in self.gestor_cadena.items():
             gco_file.write(
                 u"{etiq}{st}\n".format(etiq=f"{etiq}:".ljust(20, " "), st=f'DATA "{cadena[1:-1]}"'.ljust(20, " ")))
+
+        gco_file.write("\n;------------Datos globales-----------\n")
+        gco_file.write(u"{etiq}{st}\n".format(etiq="inicio_de:".ljust(20, " "),
+                                              st=f"RES {self.gestor_ts.tamanio_ra_global()}".ljust(20, " ")))
 
         gco_file.write("\n;------------Inicio de la pila-----------\n")
         gco_file.write(u"{etiq}{st}\n".format(etiq="inicio_pila:".ljust(20, " "), st=f"NOP".ljust(20, " ")))
@@ -124,7 +124,7 @@ class JSGco:
         if lugar == 9:  # constante cadena
             return f"#{self.etiqueta_cadena(operando.lugar)}"
         if lugar == 11:  # etiqueta
-            return f"#{operando.lugar}"
+            return f"{operando.lugar}"
 
     def operacion(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
@@ -270,22 +270,22 @@ class JSGco:
 
     def devolver_valor(self, operador, operando_a=None, operando_b=None, resultado=None):
         inst = []
-        if operando_a is not None:
-            a = self.expresion_operando(operando_a)
+        if resultado is not None:
+            result = self.expresion_operando(resultado)
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                                 st=f"SUB #tam_ra_{self.gestor_ts.actual.nombre}, #1".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, IX".ljust(20, " ")))
-            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {a}, [.A]".ljust(20, " ")))
+            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {result}, [.A]".ljust(20, " ")))
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR [.IX]".ljust(20, " ")))
         return inst
 
     def devolver_valor_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         etiq_bucle = self.etiqueta_bucle()
-        registro = ".IX" if operando_a.cod_operando != 1 else ".IY"
+        registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
         return (
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                    st=f"ADD #{operando_a.lugar}, {registro}".ljust(20, " ")),
+                                    st=f"ADD #{resultado.lugar}, {registro}".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R9".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                     st=f"SUB #tam_ra_{self.gestor_ts.actual.nombre}, #64".ljust(20, " ")),

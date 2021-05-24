@@ -11,7 +11,7 @@ class GestorTablaSimbolo:
         self.zona_decl = False
         self.indice = -1
         self.num_etiq = 0
-        self.cast_tam = {'logico': 1, 'cadena': 64, 'entero': 1}
+        self.cast_tam = {'logico': 1, 'cadena': 64, 'entero': 1, 'vacio': 0}
 
     def crea_tabla(self, indice):
         self.actual = TablaSimbolo(self.global_.get_simbolo(indice).lexema)
@@ -79,14 +79,13 @@ class GestorTablaSimbolo:
         return Operando(11, etiq, etiq)
 
     def tamanio_ra_global(self):
-        return self.global_.despl
+        return 1 + self.global_.despl
 
     def tamanio_ra(self, tabla):
         if tabla.nombre == 'global':
-            return self.global_.despl
+            return 1 + self.global_.despl
         simbolo = self.global_.simbolos_dict[tabla.nombre]
-        tam_param = sum([self.cast_tam[param] for param in simbolo['tipoParam'].split(' ')])
-        return 1 + tam_param + tabla.despl + self.cast_tam[simbolo['tipoRetorno']]
+        return 1 + tabla.despl + self.cast_tam[simbolo['tipoRetorno']]
 
     def es_global(self, indice):
         return self.actual.get_simbolo(indice) is None
