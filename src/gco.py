@@ -151,14 +151,14 @@ class JSGco:
                                             st=f"ADD #{operando_a.lugar}, {registro_origen}".ljust(20, " ")))
             inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R9".ljust(20, " "), comen=f"; Copia la dir de cadena en R9".ljust(20, " ")))
         else:
-            inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {etiq_cadena}, .R9".ljust(20, " "))]
+            inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE {etiq_cadena}, .R9".ljust(20, " "), comen=f"; Copia la dir de cadena en R9".ljust(20, " ")))
 
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                             st=f"ADD #{resultado.lugar}, {registro_destino}".ljust(20, " ")))
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R8".ljust(20, " ")))
         # bucle copia cadena
         inst.append(
-            u"{etiq}{st}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " ")))
+            u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_bucle}:".ljust(20, " "), st=f"MOVE [.R9], [.R8]".ljust(20, " "),comen=f"; Bucle de copia de cadena".ljust(20, " ")))
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R9".ljust(20, " ")))
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INC .R8".ljust(20, " ")))
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"CMP #0, [.R9]".ljust(20, " ")))
@@ -178,7 +178,8 @@ class JSGco:
 
     def pasar_parametro(self, operador, operando_a=None, operando_b=None, resultado=None):
         origen = self.expresion_operando(operando_a)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Pasar parametro".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                         st=f"ADD #tam_ra_{self.gestor_ts.actual.nombre}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD #{operando_a.lugar}, .A".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {origen}, [.A]".ljust(20, " ")))
@@ -188,7 +189,8 @@ class JSGco:
         etiq_bucle = self.etiqueta_bucle()
         registro = ".IX" if operando_a.cod_operando != 1 else ".IY"
         return (
-            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {etiq_cadena}, .R9".ljust(20, " ")),
+            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f";Pasar parametro cadena".ljust(20, " ")),
+            u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE {etiq_cadena}, .R9".ljust(20, " "), comen=f"; Copia la dir de cadena en R9".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                     st=f"ADD #{operando_a.lugar}, {registro}".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R8".ljust(20, " ")),
@@ -209,7 +211,8 @@ class JSGco:
         etiq_funcion = self.expresion_operando(operando_a)
         etiq_ret = self.etiqueta_dir_ret()
         llamador = self.gestor_ts.actual.nombre
-        inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+        inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Inicio de llamar funcion".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                         st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                         st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
@@ -228,8 +231,8 @@ class JSGco:
             inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE .R9, {destino}".ljust(20, " "),comen=f"; Valor devuelto en el dato temporal correspondiente".ljust(20, " ")))
 
         else:
-            inst.append(u"{etiq}{st}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
-                                                st=f"SUB .IX, #tam_ra_{llamador}".ljust(20, " ")))
+            inst.append(u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
+                                                st=f"SUB .IX, #tam_ra_{llamador}".ljust(20, " "), comen=f"; Etiqueta de retorno".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .IX".ljust(20, " ")))
 
         return inst
@@ -248,8 +251,8 @@ class JSGco:
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                         st=f"MOVE .A, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /{etiq_funcion}".ljust(20, " ")),
-                u"{etiq}{st}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
-                                        st=f"SUB #tam_ra_{llamador}, #64".ljust(20, " ")),
+                u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
+                                        st=f"SUB #tam_ra_{llamador}, #64".ljust(20, " "), comen=f"; Etiqueta de retorno".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, .IX".ljust(20, " ")),
                 u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE [.A], .R9".ljust(20, " "),comen=f"; Valor devuelto en R9".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"SUB .IX, #tam_ra_{llamador}".ljust(20, " ")),
@@ -271,6 +274,8 @@ class JSGco:
         if resultado is not None:
             result = self.expresion_operando(resultado)
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                                st=f"; Return de funcion {self.gestor_ts.actual.nombre}".ljust(20, " ")))
+            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                                 st=f"SUB #tam_ra_{self.gestor_ts.actual.nombre}, #1".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, IX".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {result}, [.A]".ljust(20, " ")))
@@ -282,6 +287,8 @@ class JSGco:
         registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
         return (
+            u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                          st=f"; Return de funcion {self.gestor_ts.actual.nombre}".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                     st=f"ADD #{resultado.lugar}, {registro}".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R9".ljust(20, " ")),
@@ -303,11 +310,13 @@ class JSGco:
 
     def alert_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"WRINT {a}".ljust(20, " "))
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"alert entero".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"WRINT {a}".ljust(20, " ")))
 
     def alert_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"WRSTR {a}".ljust(20, " "))
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"alert cadena".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"WRSTR {a}".ljust(20, " ")))
 
     def input_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
