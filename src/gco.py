@@ -47,7 +47,7 @@ class JSGco:
         # cabezera del codigo ensamblador
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ORG 0".ljust(20, " ")))
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_de, .IY".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila .IX".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila, .IX".ljust(20, " ")))
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /fun_global".ljust(20, " ")))
 
         gco_file.write("\n;------------Codigos de las funciones------------\n")
@@ -256,7 +256,7 @@ class JSGco:
         registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
         return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                       st=f"MOVE {etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
+                                       st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -291,7 +291,7 @@ class JSGco:
                                                st=f"; Return de funcion {self.gestor_ts.actual.nombre}".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                                st=f"SUB #tam_ra_{self.gestor_ts.actual.nombre}, #1".ljust(20, " ")))
-            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, IX".ljust(20, " ")))
+            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, .IX".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {result}, [.A]".ljust(20, " ")))
         inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR [.IX]".ljust(20, " ")))
         return inst
