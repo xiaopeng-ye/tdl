@@ -440,6 +440,7 @@ class JSSemantic:
         b = self.pila_aux[-9]
         c = self.pila[-2]
 
+        self.gco.actual_file.write('; Inicio de comparacion bucle \n')
         b.inicio = self.gestor_ts.nueva_etiq()
         b.salida = self.gestor_ts.nueva_etiq()
         self.gci.emite(':', operando_a=b.inicio)

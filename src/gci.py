@@ -20,6 +20,6 @@ class Operando:
 
     @property
     def lugar(self):
-        if type(self._lugar) == int:
+        if self.cod_operando in (1, 2, 4, 6):
             return 1 + self._lugar
         return self._lugar
