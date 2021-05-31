@@ -209,7 +209,7 @@ class JSGco:
 
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                    st=f"ADD #tam_ra_{self.gestor_ts.actual.nombre}, .IX".ljust(20, " ")),
-            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD #{operando_a.lugar}, .A".ljust(20, " ")),
+            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD #{operando_a.despl_param}, .A".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .R8, [.A]".ljust(20, " "))
         )
 

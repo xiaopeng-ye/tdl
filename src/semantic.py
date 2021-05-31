@@ -132,6 +132,7 @@ class JSSemantic:
         y1 = self.pila[-1]
 
         y1.lugar = self.gestor_ts.nueva_temp('logico')
+        self.gci.emite('or', operando_a=y.lugar, operando_b=r.lugar, resultado=y1.lugar)
 
     def regla_Y2(self):  # Y -> || R Y1
         y1 = self.pila_aux.pop()
@@ -176,6 +177,7 @@ class JSSemantic:
         i1 = self.pila[-1]
 
         i1.lugar = self.gestor_ts.nueva_temp('logico')
+        self.gci.emite('and', operando_a=i.lugar, operando_b=u.lugar, resultado=i1.lugar)
 
     def regla_I2(self):  # I -> && U I1
         i1 = self.pila_aux.pop()
@@ -410,6 +412,10 @@ class JSSemantic:
 
         id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
         b.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
+        if t.tipo == 'cadena':
+            self.gci.emite(':=cad', operando_a=Operando(9, "''", "''"), resultado=b.lugar)
+        else:
+            self.gci.emite(':=', operando_a=Operando(7, '0', '0'), resultado=b.lugar)
 
     def regla_B1_3(self):  # B -> let T ID
         self.gestor_ts.zona_decl = False
