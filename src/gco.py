@@ -185,7 +185,7 @@ class JSGco:
         return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Pasar parametro".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{self.gestor_ts.actual.nombre}, .IX".ljust(20, " ")),
-                u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD #{operando_a.lugar}, .A".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD #{operando_a.despl_param}, .A".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {origen}, [.A]".ljust(20, " ")))
 
     def pasar_parametro_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):

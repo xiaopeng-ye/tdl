@@ -276,6 +276,7 @@ class JSSemantic:
         j1 = self.pila[-1]
 
         j1.lugar = self.gestor_ts.nueva_temp('entero')
+        self.gci.emite(operador.valor, operando_a=j.lugar, operando_b=w.lugar, resultado=j1.lugar)
 
     def regla_J2(self):  # J -> + W J1  y J -> - W J1
         j1 = self.pila_aux.pop()
@@ -291,7 +292,6 @@ class JSSemantic:
                                     'Se esperaba un tipo entero de los operandos del operador aritmético',
                                     operador.linea)  # 209
 
-        self.gci.emite(operador.valor, operando_a=j.lugar, operando_b=w.lugar, resultado=j1.lugar)
         j.lugar = j1.lugar
 
     def regla_W1(self):  # W -> ++ ID
@@ -348,8 +348,11 @@ class JSSemantic:
                 self.gestor_err.imprime('Semántico', 'Los tipos de los parámetros no coinciden', id_.linea)  # 212
 
             w.lugar = self.gestor_ts.nueva_temp(id_simbolo['tipoRetorno'])
+            despl = 1
             for lugar, tipo in zip(d.lugares, id_simbolo['tipoParam'].split(' ')):
+                lugar.despl_param = despl
                 self.gci.emite(u'param{cad}'.format(cad='(cad)' if tipo == 'cadena' else ''), operando_a=lugar)
+                despl += 64 if tipo == 'cadena' else 1
             self.gci.emite(u'call{cad}'.format(cad='(cad)' if id_simbolo['tipoRetorno'] == 'cadena' else ''),
                            operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']),
                            resultado=w.lugar)
@@ -551,8 +554,11 @@ class JSSemantic:
                 s.tipo = 'error'
                 self.gestor_err.imprime('Semántico', 'Los tipos de los parámetros no coinciden', id_.linea)  # 212
 
+            despl = 1
             for lugar, tipo in zip(g.lugares, id_simbolo['tipoParam'].split(' ')):
+                lugar.despl_param = despl
                 self.gci.emite(u'param{cad}'.format(cad='(cad)' if tipo == 'cadena' else ''), operando_a=lugar)
+                despl += 64 if tipo == 'cadena' else 1
             self.gci.emite('call', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
 
         elif id_simbolo['tipo'] == g.tipo:
