@@ -170,13 +170,21 @@ B -> if ( E ) {
 	emite(B.salida, ':');
 }
 
-B -> for ( N ; E ; M ) { (OJOOOOO!!!)
-	B.inicio := nuevaetiq();
-  	B.salida := nuevaetiq();
-  	emite(B.inicio, ':');
-  	emite('if', E.lugar, '=', '0', 'goto', B.salida);
+B -> for ( N ; {
+    B.inicio := nuevaetiq();
+    B.medio := nuevaetiq();
+    B.cuerpo := nuevaetiq();
+    B.salida := nuevaetiq();
+    emite(B.inicio, ':');
+} E ;{
+    emite('if', E.lugar, '=', '0', 'goto', B.salida);
+    emite('goto', B.cuerpo);
+    emite(B.medio, ':');
+} M ) {
+    emite('goto', B.inicio);
+    emite(B.cuerpo, ':');
 } { C } {
-	emite('goto', B.inicio);
+	emite('goto', B.medio);
 	emite(B.salida, ':')
 }
 

@@ -435,18 +435,35 @@ class JSSemantic:
 
         self.gci.emite(':', operando_a=b.salida)
 
-    def regla_B3_1(self):  # B -> for ( N ; E ; M )
-        e = self.pila_aux[-4]
-        b = self.pila_aux[-9]
-        c = self.pila[-2]
+    def regla_B3_0(self):  # B -> for (
+        self.gco.actual_file.write(';Inicio bucle for\n')
 
-        self.gco.actual_file.write('; Inicio de comparacion bucle \n')
+    def regla_B3_1(self):  # B -> for ( N ;
+        b = self.pila_aux[-5]
+
         b.inicio = self.gestor_ts.nueva_etiq()
+        b.medio = self.gestor_ts.nueva_etiq()
+        b.cuerpo = self.gestor_ts.nueva_etiq()
         b.salida = self.gestor_ts.nueva_etiq()
         self.gci.emite(':', operando_a=b.inicio)
-        self.gci.emite('goto==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
+        self.gco.actual_file.write(';Expresion\n')
 
-    def regla_B3_2(self):  # B -> for ( N ; E ; M ) { C }
+    def regla_B3_2(self):  # B -> for ( N ; E ;
+        e = self.pila_aux[-2]
+        b = self.pila_aux[-7]
+        self.gco.actual_file.write(';Fin expresion\n')
+        self.gci.emite('goto==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
+        self.gci.emite('goto', resultado=b.cuerpo)
+        self.gci.emite(':', operando_a=b.medio)
+        self.gco.actual_file.write(';Actualizacion\n')
+
+    def regla_B3_3(self):  # B -> for ( N ; E ; M )
+        b = self.pila_aux[-9]
+        self.gco.actual_file.write(';Fin Actualizacion\n')
+        self.gci.emite('goto', resultado=b.inicio)
+        self.gci.emite(':', operando_a=b.cuerpo)
+
+    def regla_B3_4(self):  # B -> for ( N ; E ; M ) { C }
         self.pila_aux.pop()
         c = self.pila_aux.pop()
         self.pila_aux.pop()
@@ -467,8 +484,9 @@ class JSSemantic:
             b.tipo = 'error'
             self.gestor_err.imprime('Semántico', 'Expresión no válida', for_.linea)  # 215
 
-        self.gci.emite('goto', resultado=b.inicio)
+        self.gci.emite('goto', resultado=b.medio)
         self.gci.emite(':', operando_a=b.salida)
+        self.gco.actual_file.write(';Fin bucle for\n')
 
     def regla_N1(self):  # N -> ID = E
         e = self.pila_aux.pop()

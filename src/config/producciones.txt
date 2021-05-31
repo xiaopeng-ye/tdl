@@ -31,7 +31,7 @@ D -> ( L ) regla_D
 D -> lambda regla_D1
 B -> let regla_B1_1 T ID regla_B1_3 ; regla_B1_2
 B -> if ( E ) regla_B2_1 S regla_B2_2
-B -> for ( N ; E ; M ) regla_B3_1 { C } regla_B3_2
+B -> for ( regla_B3_0 N ; regla_B3_1 E ; regla_B3_2 M ) regla_B3_3 { C } regla_B3_4
 N -> ID = E regla_N1
 N -> lambda regla_N2
 M -> N regla_M1

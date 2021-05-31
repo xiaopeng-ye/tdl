@@ -175,7 +175,7 @@ class JSGco:
     def salto_condicional(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
         b = self.expresion_operando(operando_b)
-        op = "BZ" if operador == "goto==" else "BP"
+        op = "BZ" if operador == "goto==" else "BNZ"
 
         return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"CMP {a}, {b}".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"{op} /{resultado.lugar}".ljust(20, " ")))
