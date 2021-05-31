@@ -218,8 +218,14 @@ class JSGco:
         etiq_ret = self.etiqueta_dir_ret()
         llamador = self.gestor_ts.actual.nombre
         inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Llamada de funcion {llamador}".ljust(20, " ")),
+                # u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                      # st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                       st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
+                                       st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                       st=f"MOVE #{etiq_ret}, [.A]".ljust(20, " ")),
+
+
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -228,7 +234,7 @@ class JSGco:
         if resultado is not None:
             destino = self.expresion_operando(resultado)
             inst.append(u"{etiq}{st}{comen}\n".format(etiq=f"{etiq_ret}:".ljust(20, " "),
-                                                      st=f"SUB #tam_ra_{llamador}, #1".ljust(20, " "),
+                                                      st=f"SUB #tam_ra_{etiq_funcion[4:]}, #1".ljust(20, " "),
                                                       comen=f"; Etiqueta de retorno".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, .IX".ljust(20, " ")))
             inst.append(u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE [.A], .R9".ljust(20, " "),
@@ -255,8 +261,14 @@ class JSGco:
         etiq_bucle = self.etiqueta_bucle()
         registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                       st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Llamada de funcion {llamador}".ljust(20, " ")),
+                #u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                       #st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                       st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
+                                       st=f"MOVE #{etiq_ret}, [.A]".ljust(20, " ")),
+
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
