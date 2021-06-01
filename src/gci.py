@@ -11,6 +11,12 @@ class JSGci:
             resultado='' if resultado is None else resultado.simbolo))
         self.gco.generar_codigo_objeto(operador, operando_a=operando_a, operando_b=operando_b, resultado=resultado)
 
+    def emite_global_no_init(self, var_no_declarado):
+        self.gci_file.write(f'(:=, 0, , {var_no_declarado.simbolo})\n')
+        destino = self.gco.expresion_operando(var_no_declarado)
+        self.gco.global_no_init.write(
+            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #0, {destino}".ljust(20, " ")))
+
 
 class Operando:
     def __init__(self, cod_operando, lugar, simbolo):

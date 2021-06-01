@@ -6,6 +6,7 @@ class JSGco:
 
     def __init__(self, gestor_ts):
         self.gestor_ts = gestor_ts
+        self.global_no_init = tempfile.TemporaryFile(mode='w+t', encoding='UTF-8')
         self.funciones_file = tempfile.TemporaryFile(mode='w+t', encoding='UTF-8')
         self.main_file = tempfile.TemporaryFile(mode='w+t', encoding='UTF-8')
         self.actual_file = self.main_file
@@ -23,8 +24,8 @@ class JSGco:
             ':=': self.asignacion,
             ':=cad': self.asignacion_cadena,
             'goto': self.salto,
-            'goto==': self.salto_condicional,
-            'goto!=': self.salto_condicional,
+            'if==': self.salto_condicional,
+            'if!=': self.salto_condicional,
             'param': self.pasar_parametro,
             'param(cad)': self.pasar_parametro_cadena,
             'call': self.llamar_funcion,
@@ -44,9 +45,11 @@ class JSGco:
         # inicializar etiquetas del programa
         self.funciones_file.seek(0)
         self.main_file.seek(0)
+        self.global_no_init.seek(0)
+
         # cabezera del codigo ensamblador
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ORG 0".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_de, .IY".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila, .IY".ljust(20, " ")))
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila, .IX".ljust(20, " ")))
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /fun_global".ljust(20, " ")))
 
@@ -55,12 +58,16 @@ class JSGco:
 
         gco_file.write("\n;------------Codigos del programa principal------------\n")
         gco_file.write(u"{etiq}{st}\n\n".format(etiq="fun_global:".ljust(20, " "), st=f"NOP".ljust(20, " ")))
+        gco_file.write(u"{etiq}{st}\n\n".format(etiq="".ljust(20, " "),
+                                                st=f"; Init de las globales no declaradas".ljust(20, " ")))
+
+        gco_file.writelines(self.global_no_init.readlines())
+        gco_file.write(u"\n{etiq}{st}\n\n".format(etiq="".ljust(20, " "),
+                                                st=f"; Fin init de las globales no declaradas".ljust(20, " ")))
         gco_file.writelines(self.main_file.readlines())
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"HALT".ljust(20, " ")))
 
         gco_file.write("\n;------------Tamanio RA de las funciones----------\n")
-        # gco_file.write(u"{etiq}{st}\n".format(etiq="tam_ra_global:".ljust(20, " "),
-        #                                        st=f"EQU {self.gestor_ts.tamanio_ra_global()}".ljust(20, " ")))
         for tabla in self.gestor_ts.lista_ts:
             gco_file.write(u"{etiq}{st}\n".format(etiq=f"tam_ra_{tabla.nombre}:".ljust(20, " "),
                                                   st=f"EQU {self.gestor_ts.tamanio_ra(tabla)}".ljust(20, " ")))
@@ -70,9 +77,9 @@ class JSGco:
             gco_file.write(
                 u"{etiq}{st}\n".format(etiq=f"{etiq}:".ljust(20, " "), st=f'DATA "{cadena[1:-1]}"'.ljust(20, " ")))
 
-        gco_file.write("\n;------------Datos globales-----------\n")
-        gco_file.write(u"{etiq}{st}\n".format(etiq="inicio_de:".ljust(20, " "),
-                                              st=f"RES {self.gestor_ts.tamanio_ra_global()}".ljust(20, " ")))
+        # gco_file.write("\n;------------Datos globales-----------\n")
+        # gco_file.write(u"{etiq}{st}\n".format(etiq="inicio_de:".ljust(20, " "),
+        #                                       st=f"RES {self.gestor_ts.tamanio_ra_global()}".ljust(20, " ")))
 
         gco_file.write("\n;------------Inicio de la pila-----------\n")
         gco_file.write(u"{etiq}{st}\n".format(etiq="inicio_pila:".ljust(20, " "), st=f"NOP".ljust(20, " ")))
@@ -219,12 +226,11 @@ class JSGco:
         llamador = self.gestor_ts.actual.nombre
         inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Llamada de funcion {llamador}".ljust(20, " ")),
                 # u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                      # st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
+                # st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"MOVE #{etiq_ret}, [.A]".ljust(20, " ")),
-
 
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
@@ -262,8 +268,6 @@ class JSGco:
         registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
         return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Llamada de funcion {llamador}".ljust(20, " ")),
-                #u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                       #st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),

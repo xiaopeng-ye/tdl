@@ -46,8 +46,8 @@ class GestorTablaSimbolo:
     def aniadir_var_atributos_ts_global(self, indice, tipo, tam):
         simbolo = self.global_.get_simbolo(indice)
         simbolo['tipo'] = tipo
-        simbolo['despl'] = self.actual.despl
-        self.actual.despl += tam
+        simbolo['despl'] = self.global_.despl
+        self.global_.despl += tam
 
     def aniadir_func_atributos_ts(self, indice, tipo_param, tipo_retorno):
         simbolo = self.global_.get_simbolo(indice)

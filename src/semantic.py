@@ -225,7 +225,7 @@ class JSSemantic:
         o1.lugar = self.gestor_ts.nueva_temp('logico')
         o.verdadero = self.gestor_ts.nueva_etiq()
         o.despues = self.gestor_ts.nueva_etiq()
-        self.gci.emite('goto' + comparacion.valor, operando_a=o.lugar, operando_b=v.lugar, resultado=o.verdadero)
+        self.gci.emite('if' + comparacion.valor, operando_a=o.lugar, operando_b=v.lugar, resultado=o.verdadero)
         self.gci.emite(':=', operando_a=Operando(7, '0', '0'), resultado=o1.lugar)
         self.gci.emite('goto', resultado=o.despues)
         self.gci.emite(':', operando_a=o.verdadero)
@@ -423,7 +423,7 @@ class JSSemantic:
         b = self.pila_aux[-5]
 
         b.salida = self.gestor_ts.nueva_etiq()
-        self.gci.emite('goto==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
+        self.gci.emite('if==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
 
     def regla_B2_2(self):  # B -> if ( E ) S
         s = self.pila_aux.pop()
@@ -459,7 +459,7 @@ class JSSemantic:
         e = self.pila_aux[-2]
         b = self.pila_aux[-7]
         self.gco.actual_file.write(';Fin expresion\n')
-        self.gci.emite('goto==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
+        self.gci.emite('if==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
         self.gci.emite('goto', resultado=b.cuerpo)
         self.gci.emite(':', operando_a=b.medio)
         self.gco.actual_file.write(';Actualizacion\n')

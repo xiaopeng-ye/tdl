@@ -83,8 +83,7 @@ class JSLexer:
                                 indice = self.gestor_ts.inserta_ts_global(lexema)
                                 self.gestor_ts.aniadir_var_atributos_ts_global(indice, 'entero', 1)
                                 id_simbolo = self.gestor_ts.buscar_simbolo_ts(indice)
-                                self.gci.emite(':=', operando_a=Operando(7, '0', '0'),
-                                               resultado=Operando(1, id_simbolo['despl'], id_simbolo.lexema))
+                                self.gci.emite_global_no_init(Operando(1, id_simbolo['despl'], id_simbolo.lexema))
                         yield Token('IDENTIFICADOR', indice, self.linea)
 
                 elif accion == 'E':
