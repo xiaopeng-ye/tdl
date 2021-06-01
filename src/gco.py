@@ -2,6 +2,14 @@ import tempfile
 from collections import OrderedDict
 
 
+def instruccion(operando, contenido, etiq="", comen=""):
+    return u"{etiq}{st}{c}\n".format(etiq=etiq.ljust(20, " "), st=f"{operando} {contenido}".ljust(25, " "), c=comen)
+
+
+def comentario(texto, formato=15):
+    return u"{espacio}{st}\n".format(espacio="".ljust(formato, " "), st=texto)
+
+
 class JSGco:
 
     def __init__(self, gestor_ts):
@@ -53,26 +61,24 @@ class JSGco:
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #inicio_pila, .IX".ljust(20, " ")))
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"BR /fun_global".ljust(20, " ")))
 
-        gco_file.write("\n;------------Codigos de las funciones------------\n")
+        gco_file.write("\n;------------Códigos de las funciones------------\n")
         gco_file.writelines(self.funciones_file.readlines())
 
-        gco_file.write("\n;------------Codigos del programa principal------------\n")
+        gco_file.write("\n;------------Códigos del programa principal------------\n")
         gco_file.write(u"{etiq}{st}\n\n".format(etiq="fun_global:".ljust(20, " "), st=f"NOP".ljust(20, " ")))
-        gco_file.write(u"{etiq}{st}\n\n".format(etiq="".ljust(20, " "),
-                                                st=f"; Init de las globales no declaradas".ljust(20, " ")))
+        gco_file.write(comentario("; Init de las globales no declaradas"))
 
         gco_file.writelines(self.global_no_init.readlines())
-        gco_file.write(u"\n{etiq}{st}\n\n".format(etiq="".ljust(20, " "),
-                                                st=f"; Fin init de las globales no declaradas".ljust(20, " ")))
+        gco_file.write(comentario("; Fin init de las globales no declaradas\n"))
         gco_file.writelines(self.main_file.readlines())
         gco_file.write(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"HALT".ljust(20, " ")))
 
-        gco_file.write("\n;------------Tamanio RA de las funciones----------\n")
+        gco_file.write("\n;------------Tamaño RA de las funciones----------\n")
         for tabla in self.gestor_ts.lista_ts:
             gco_file.write(u"{etiq}{st}\n".format(etiq=f"tam_ra_{tabla.nombre}:".ljust(20, " "),
                                                   st=f"EQU {self.gestor_ts.tamanio_ra(tabla)}".ljust(20, " ")))
 
-        gco_file.write("\n;------------Cadenas usadas del programa-----------\n")
+        gco_file.write("\n;------------Cadenas utilizadas del programa-----------\n")
         for cadena, etiq in self.gestor_cadena.items():
             gco_file.write(
                 u"{etiq}{st}\n".format(etiq=f"{etiq}:".ljust(20, " "), st=f'DATA "{cadena[1:-1]}"'.ljust(20, " ")))
@@ -137,7 +143,7 @@ class JSGco:
         a = self.expresion_operando(operando_a)
         b = self.expresion_operando(operando_b)
         destino = self.expresion_operando(resultado)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Operacion {operador}".ljust(20, " ")),
+        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Operación {operador}".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"{self._cast_operacion[operador]} {a}, {b}".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, {destino}".ljust(20, " ")))
@@ -145,13 +151,13 @@ class JSGco:
     def asignacion(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
         destino = self.expresion_operando(resultado)
-        return u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {a}, {destino}".ljust(20, " "))
+        return u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE {a}, {destino}".ljust(20, " ")),
 
     def asignacion_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         etiq_cadena = self.expresion_operando(operando_a)
         etiq_bucle = self.etiqueta_bucle()
         registro_destino = ".IX" if resultado.cod_operando != 1 else ".IY"
-        inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Asignacion de cadena".ljust(20, " "))]
+        inst = [comentario("; Asignación de cadena", formato=20)]
         if operando_a.cod_operando != 9:
             registro_origen = ".IX" if operando_a.cod_operando != 1 else ".IY"
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -182,14 +188,15 @@ class JSGco:
     def salto_condicional(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
         b = self.expresion_operando(operando_b)
-        op = "BZ" if operador == "goto==" else "BNZ"
+        op = "BZ" if operador == "if==" else "BNZ"
 
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"CMP {a}, {b}".ljust(20, " ")),
+        return (comentario(f"; Salto condicional {operador}", formato=20),
+                u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"CMP {a}, {b}".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"{op} /{resultado.lugar}".ljust(20, " ")))
 
     def pasar_parametro(self, operador, operando_a=None, operando_b=None, resultado=None):
         origen = self.expresion_operando(operando_a)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Pasar parametro".ljust(20, " ")),
+        return (comentario("; Pasar parámetro", formato=20),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{self.gestor_ts.actual.nombre}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD #{operando_a.despl_param}, .A".ljust(20, " ")),
@@ -200,7 +207,7 @@ class JSGco:
         etiq_bucle = self.etiqueta_bucle()
         registro = ".IX" if operando_a.cod_operando != 1 else ".IY"
         return (
-            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f";Pasar parametro cadena".ljust(20, " ")),
+            comentario("; Pasar parámetro tipo cadena", formato=20),
             u"{etiq}{st}{comen}\n".format(etiq="".ljust(20, " "), st=f"MOVE {etiq_cadena}, .R9".ljust(20, " "),
                                           comen=f"; Copia la dir de cadena en R9".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -224,7 +231,7 @@ class JSGco:
         etiq_funcion = self.expresion_operando(operando_a)
         etiq_ret = self.etiqueta_dir_ret()
         llamador = self.gestor_ts.actual.nombre
-        inst = [u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Llamada de funcion {llamador}".ljust(20, " ")),
+        inst = [comentario(f"; Invoca la función {operando_a.simbolo}"),
                 # u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                 # st=f"MOVE #{etiq_ret}, #tam_ra_{llamador}[.IX]".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -267,7 +274,7 @@ class JSGco:
         etiq_bucle = self.etiqueta_bucle()
         registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Llamada de funcion {llamador}".ljust(20, " ")),
+        return (comentario(f"; Invoca la función {operando_a.simbolo}"),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                        st=f"ADD #tam_ra_{llamador}, .IX".ljust(20, " ")),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
@@ -303,8 +310,7 @@ class JSGco:
         inst = []
         if resultado is not None:
             result = self.expresion_operando(resultado)
-            inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                               st=f"; Return de funcion {self.gestor_ts.actual.nombre}".ljust(20, " ")))
+            inst.append(comentario(f"; Return tipo entero o lógico"))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                                st=f"SUB #tam_ra_{self.gestor_ts.actual.nombre}, #1".ljust(20, " ")))
             inst.append(u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ADD .A, .IX".ljust(20, " ")))
@@ -317,8 +323,7 @@ class JSGco:
         registro = ".IX" if resultado.cod_operando != 1 else ".IY"
 
         return (
-            u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
-                                   st=f"; Return de funcion {self.gestor_ts.actual.nombre}".ljust(20, " ")),
+            comentario(f"; Return tipo cadena"),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "),
                                    st=f"ADD #{resultado.lugar}, {registro}".ljust(20, " ")),
             u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE .A, .R9".ljust(20, " ")),
@@ -341,20 +346,20 @@ class JSGco:
 
     def alert_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Alert entero".ljust(20, " ")),
+        return (comentario("; Alert entero"),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"WRINT {a}".ljust(20, " ")))
 
     def alert_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Alert cadena".ljust(20, " ")),
+        return (comentario("; Alert cadena"),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"WRSTR {a}".ljust(20, " ")))
 
     def input_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Input entero".ljust(20, " ")),
+        return (comentario("; Input entero"),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"ININT {a}".ljust(20, " ")))
 
     def input_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         a = self.expresion_operando(operando_a)
-        return (u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"; Input cadena".ljust(20, " ")),
+        return (comentario("; Input cadena"),
                 u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"INSTR {a}".ljust(20, " ")))

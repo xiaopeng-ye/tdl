@@ -1,5 +1,6 @@
 from collections import deque
 from gci import Operando
+from gco import comentario
 
 
 class JSSemantic:
@@ -44,6 +45,8 @@ class JSSemantic:
         self.gestor_ts.zona_decl = False
 
         id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
+        self.gco.actual_file.write(
+            comentario(u'; Declaración de la función {nombre}'.format(nombre=id_simbolo['etiqFuncion'][4:]), formato=0))
         self.gci.emite(':', operando_a=Operando(11, id_simbolo['etiqFuncion'], id_simbolo['etiqFuncion']))
 
     def regla_F4(self):  # F -> function H ID ( A ) { C
@@ -63,6 +66,7 @@ class JSSemantic:
 
     def regla_F5(self):  # F -> function H ID ( A ) { C }
         self.gci.emite('return')
+        self.gco.actual_file.write(comentario('; Fin declaración de la función\n', formato=0))
         self.gco.es_codigo_main = True
 
         self.pila_aux.pop()
@@ -410,6 +414,7 @@ class JSSemantic:
 
         id_simbolo = self.gestor_ts.buscar_simbolo_ts(id_.pos)
         b.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
+        self.gco.actual_file.write(comentario(f'; Inicializa la variable {id_simbolo.lexema}'))
         if t.tipo == 'cadena':
             self.gci.emite(':=cad', operando_a=Operando(9, "''", "''"), resultado=b.lugar)
         else:
@@ -417,6 +422,9 @@ class JSSemantic:
 
     def regla_B1_3(self):  # B -> let T ID
         self.gestor_ts.zona_decl = False
+
+    def regla_B2_0(self):  # B -> if
+        self.gco.actual_file.write(comentario('; Inicio IF'))
 
     def regla_B2_1(self):  # B -> if ( E )
         e = self.pila_aux[-2]
@@ -441,9 +449,10 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'Se espera una expresión de tipo lógico', if_.linea)  # 214
 
         self.gci.emite(':', operando_a=b.salida)
+        self.gco.actual_file.write(comentario('; Fin IF\n'))
 
     def regla_B3_0(self):  # B -> for (
-        self.gco.actual_file.write(';Inicio bucle for\n')
+        self.gco.actual_file.write(comentario('; Inicio bucle FOR'))
 
     def regla_B3_1(self):  # B -> for ( N ;
         b = self.pila_aux[-5]
@@ -453,21 +462,22 @@ class JSSemantic:
         b.cuerpo = self.gestor_ts.nueva_etiq()
         b.salida = self.gestor_ts.nueva_etiq()
         self.gci.emite(':', operando_a=b.inicio)
-        self.gco.actual_file.write(';Expresion\n')
+        self.gco.actual_file.write(comentario('; Condición del bucle FOR'))
 
     def regla_B3_2(self):  # B -> for ( N ; E ;
         e = self.pila_aux[-2]
         b = self.pila_aux[-7]
-        self.gco.actual_file.write(';Fin expresion\n')
         self.gci.emite('if==', operando_a=e.lugar, operando_b=Operando(7, '0', '0'), resultado=b.salida)
         self.gci.emite('goto', resultado=b.cuerpo)
+        self.gco.actual_file.write(comentario('; Fin condición del bucle FOR\n'))
         self.gci.emite(':', operando_a=b.medio)
-        self.gco.actual_file.write(';Actualizacion\n')
+        self.gco.actual_file.write(comentario('; Actualización del bucle FOR'))
 
     def regla_B3_3(self):  # B -> for ( N ; E ; M )
         b = self.pila_aux[-9]
-        self.gco.actual_file.write(';Fin Actualizacion\n')
+        self.gco.actual_file.write(comentario('; Fin actualización del bucle FOR\n'))
         self.gci.emite('goto', resultado=b.inicio)
+        self.gco.actual_file.write(comentario('; Cuerpo del bucle FOR'))
         self.gci.emite(':', operando_a=b.cuerpo)
 
     def regla_B3_4(self):  # B -> for ( N ; E ; M ) { C }
@@ -492,8 +502,9 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'Expresión no válida', for_.linea)  # 215
 
         self.gci.emite('goto', resultado=b.medio)
+        self.gco.actual_file.write(comentario('; Fin cuerpo del bucle FOR\n'))
         self.gci.emite(':', operando_a=b.salida)
-        self.gco.actual_file.write(';Fin bucle for\n')
+        self.gco.actual_file.write(comentario('; Fin bucle FOR\n'))
 
     def regla_N1(self):  # N -> ID = E
         e = self.pila_aux.pop()
@@ -509,6 +520,7 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'El tipo de valor asignado es incompatible con el tipo de la variable',
                                     id_.linea)  # 216
 
+        self.gco.actual_file.write(comentario(f'; Asignación de la variable {id_simbolo.lexema}'))
         self.gci.emite(':=cad' if e.tipo == 'cadena' else ':=', operando_a=e.lugar,
                        resultado=Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema))
 
@@ -533,6 +545,7 @@ class JSSemantic:
             self.gestor_err.imprime('Semántico', 'Solo se puede auto incrementar variables de tipo entero',
                                     elem.linea)  # 210
 
+        self.gco.actual_file.write(comentario('; Autoincremento'))
         m.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
         self.gci.emite('+', operando_a=m.lugar, operando_b=Operando(7, '1', '1'),
                        resultado=Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema))
@@ -587,6 +600,7 @@ class JSSemantic:
                                     id_.linea)  # 210
         s.ret = 'vacio'
 
+        self.gco.actual_file.write(comentario('; Autoincremento'))
         s.lugar = Operando(self.codigo_variable(id_.pos), id_simbolo['despl'], id_simbolo.lexema)
         self.gci.emite('+', operando_a=s.lugar, operando_b=Operando(7, '1', '1'), resultado=s.lugar)
 
@@ -596,6 +610,7 @@ class JSSemantic:
         g = self.pila_aux[-1]
         g.tipo = e.tipo
 
+        self.gco.actual_file.write(comentario(f'; Asignación de la variable {g.lugar.simbolo}'))
         self.gci.emite(':=cad' if e.tipo == 'cadena' else ':=', operando_a=e.lugar, resultado=g.lugar)
 
     def regla_G2(self):  # G -> ( L )
