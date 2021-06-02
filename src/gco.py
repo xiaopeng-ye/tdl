@@ -216,13 +216,22 @@ class JSGco:
         return instruccion("BR", f"/{resultado.lugar}"),
 
     def salto_condicional(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
-        b = self.expresion_operando(operando_b)
+        reg_a = self.registro_variable(operando_a)
+        reg_b = self.registro_variable(operando_b)
         op = "BZ" if operador == "if==" else "BNZ"
 
-        return (comentario(f"; Salto condicional {operador}", formato=20),
-                instruccion("CMP", f"{a}, {b}"),
-                instruccion(f"{op}", f"/{resultado.lugar}"))
+        if operando_b.cod_operando == 7:
+            return (comentario(f"; Salto condicional {operador}", formato=20),
+                    instruccion("ADD", f"#{operando_a.lugar}, {reg_a}"),
+                    instruccion("CMP", f"#{operando_b.lugar}, [.A]"),
+                    instruccion(f"{op}", f"/{resultado.lugar}"))
+        else:
+            return (comentario(f"; Salto condicional {operador}", formato=20),
+                    instruccion("ADD", f"#{operando_a.lugar}, {reg_a}"),
+                    instruccion("MOVE", ".A, .R9"),
+                    instruccion("ADD", f"#{operando_b.lugar}, {reg_b}"),
+                    instruccion("CMP", "[.A], [.R9]"),
+                    instruccion(f"{op}", f"/{resultado.lugar}"))
 
     def pasar_parametro(self, operador, operando_a=None, operando_b=None, resultado=None):
         reg_origen = self.registro_variable(operando_a)
