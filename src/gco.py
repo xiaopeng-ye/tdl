@@ -183,11 +183,16 @@ class JSGco:
                     instruccion("MOVE", "[.A], [.R9]"))
 
     def asignacion_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
+        inst = [comentario("; Asignación de cadena", formato=20)]
+        registro_destino = self.registro_variable(resultado)
+        if operando_a.lugar == "''":
+            inst.append(instruccion("ADD", f"#{resultado.lugar}, {registro_destino}"))
+            inst.append(instruccion("MOVE", "#0, [.A]"))
+            return inst
+
         etiq_cadena = self.expresion_operando(operando_a)
         etiq_bucle = self.etiqueta_bucle()
         etiq_fin_bucle = self.etiqueta_fin_bucle()
-        registro_destino = ".IX" if resultado.cod_operando != 1 else ".IY"
-        inst = [comentario("; Asignación de cadena", formato=20)]
         if operando_a.cod_operando != 9:
             registro_origen = ".IX" if operando_a.cod_operando != 1 else ".IY"
             inst.append(instruccion("ADD", f"#{operando_a.lugar}, {registro_origen}"))
