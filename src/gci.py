@@ -1,3 +1,6 @@
+from gco import instruccion
+
+
 class JSGci:
     def __init__(self, gco):
         self.gci_file = open('gci.txt', 'w', encoding='UTF-8')
@@ -13,9 +16,9 @@ class JSGci:
 
     def emite_global_no_init(self, var_no_declarado):
         self.gci_file.write(f'(:=, 0, , {var_no_declarado.simbolo})\n')
-        destino = self.gco.expresion_operando(var_no_declarado)
-        self.gco.global_no_init.write(
-            u"{etiq}{st}\n".format(etiq="".ljust(20, " "), st=f"MOVE #0, {destino}".ljust(20, " ")))
+        reg_destino = self.gco.registro_variable(var_no_declarado)
+        self.gco.global_no_init.writelines((instruccion("ADD", f"#{var_no_declarado.lugar}, {reg_destino}"),
+                                            instruccion("MOVE", f"#0, [.A]")))
 
 
 class Operando:

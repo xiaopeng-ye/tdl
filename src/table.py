@@ -88,7 +88,7 @@ class GestorTablaSimbolo:
         return 1 + tabla.despl + self.cast_tam[simbolo['tipoRetorno']]
 
     def es_global(self, indice):
-        return self.actual.get_simbolo(indice) is None
+        return self.global_.get_simbolo(indice) is not None
 
     def imprime(self):
         with open('tabla_simbolos.txt', 'w') as f:

@@ -28,6 +28,8 @@ class JSLexer:
 
     def cast_position(self, char):
         if char.isalpha():
+            if char == 'n':
+                return 42
             return 0
         elif char.isdigit():
             return 2
@@ -115,6 +117,8 @@ class JSLexer:
                         self.gestor_err.imprime('Léxico', self.gestor_err.error_lexico[109], self.linea)
                         char = None
                 elif accion == 'L':
+                    if char in ('n', '\\'):
+                        char = '\\' + char
                     lexema += char
                     char = self.next_char()
                 elif accion == 'M':

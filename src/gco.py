@@ -21,6 +21,7 @@ class JSGco:
         self.cadena_count = 0
         self.gestor_cadena = OrderedDict()
         self.bucle_count = 0
+        self.fin_bucle_count = 0
         self.dir_ret_count = 0
         self.gestor_dir_ret = OrderedDict()
         self.dir_ret_count = 0
@@ -115,6 +116,10 @@ class JSGco:
         self.bucle_count += 1
         return f"bucle{self.bucle_count}"
 
+    def etiqueta_fin_bucle(self):
+        self.fin_bucle_count += 1
+        return f"fin_bucle{self.fin_bucle_count}"
+
     def etiqueta_dir_ret(self):
         self.dir_ret_count += 1
         return f"dir_ret{self.dir_ret_count}"
@@ -138,22 +143,49 @@ class JSGco:
         if lugar == 11:  # etiqueta
             return f"{operando.lugar}"
 
+    def registro_variable(self, operando):
+        if operando.cod_operando == 1:
+            return ".IY"
+        if operando.cod_operando in (2, 4, 6):
+            return ".IX"
+
     def operacion(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
-        b = self.expresion_operando(operando_b)
-        destino = self.expresion_operando(resultado)
-        return (comentario(f"; Operación {operador}", formato=20),
-                instruccion(f"{self._cast_operacion[operador]}", f"{a}, {b}"),
-                instruccion("MOVE", f".A, {destino}"))
+        reg_a = self.registro_variable(operando_a)
+        reg_b = self.registro_variable(operando_b)
+        reg_destino = self.registro_variable(resultado)
+        if operando_b.cod_operando == 7:
+            return (comentario(f"; Operación {operador}", formato=20),
+                    instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"),
+                    instruccion("MOVE", ".A, .R7"),
+                    instruccion("ADD", f"#{operando_a.lugar}, {reg_a}"),
+                    instruccion(f"{self._cast_operacion[operador]}", f"#{operando_b.lugar}, [.A]"),
+                    instruccion("MOVE", ".A, [.R7]"))
+        else:
+            return (comentario(f"; Operación {operador}", formato=20),
+                    instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"),
+                    instruccion("MOVE", ".A, .R7"),
+                    instruccion("ADD", f"#{operando_b.lugar}, {reg_b}"),
+                    instruccion("MOVE", ".A, .R8"),
+                    instruccion("ADD", f"#{operando_a.lugar}, {reg_a}"),
+                    instruccion(f"{self._cast_operacion[operador]}", "[.A], [.R8]"),
+                    instruccion("MOVE", ".A, [.R7]"))
 
     def asignacion(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
-        destino = self.expresion_operando(resultado)
-        return instruccion("MOVE", f"{a}, {destino}"),
+        reg_a = self.registro_variable(operando_a)
+        reg_destino = self.registro_variable(resultado)
+        if operando_a.cod_operando == 7:
+            return (instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"),
+                    instruccion("MOVE", f"#{operando_a.lugar}, [.A]"))
+        else:
+            return (instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"),
+                    instruccion("MOVE", f".A, .R9"),
+                    instruccion("ADD", f"#{operando_a.lugar}, {reg_a}"),
+                    instruccion("MOVE", "[.A], [.R9]"))
 
     def asignacion_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         etiq_cadena = self.expresion_operando(operando_a)
         etiq_bucle = self.etiqueta_bucle()
+        etiq_fin_bucle = self.etiqueta_fin_bucle()
         registro_destino = ".IX" if resultado.cod_operando != 1 else ".IY"
         inst = [comentario("; Asignación de cadena", formato=20)]
         if operando_a.cod_operando != 9:
@@ -166,11 +198,13 @@ class JSGco:
         inst.append(instruccion("ADD", f"#{resultado.lugar}, {registro_destino}"))
         inst.append(instruccion("MOVE", ".A, .R8"))
         # bucle copia cadena
-        inst.append(instruccion("MOVE", "[.R9], [.R8]", etiq=f"{etiq_bucle}:", comen="; Bucle de copia de cadena"))
+        inst.append(instruccion("CMP", "#0, [.R9]", etiq=f"{etiq_bucle}:"))
+        inst.append(instruccion(f"BZ", f"/{etiq_fin_bucle}"))
+        inst.append(instruccion("MOVE", "[.R9], [.R8]", comen="; Bucle de copia de cadena"))
         inst.append(instruccion("INC", ".R9"))
         inst.append(instruccion("INC", ".R8"))
-        inst.append(instruccion("CMP", "#0, [.R9]"))
-        inst.append(instruccion(f"BNZ", f"/{etiq_bucle}"))
+        inst.append(instruccion("BR", f"/{etiq_bucle}"))
+        inst.append(instruccion("MOVE", "#0, [.R8]", etiq=f"{etiq_fin_bucle}:"))
         return inst
 
     def salto(self, operador, operando_a=None, operando_b=None, resultado=None):
@@ -186,31 +220,33 @@ class JSGco:
                 instruccion(f"{op}", f"/{resultado.lugar}"))
 
     def pasar_parametro(self, operador, operando_a=None, operando_b=None, resultado=None):
-        origen = self.expresion_operando(operando_a)
+        reg_origen = self.registro_variable(operando_a)
         return (comentario("; Pasar parámetro", formato=20),
                 instruccion("ADD", f"#tam_ra_{self.gestor_ts.actual.nombre}, .IX"),
                 instruccion("ADD", f"#{operando_a.despl_param}, .A"),
-                instruccion("MOVE", f"{origen}, [.A]"))
+                instruccion("MOVE", ".A, .R9"),
+                instruccion("ADD", f"#{operando_a.lugar}, {reg_origen}"),
+                instruccion("MOVE", f"[.A], [.R9]"))
 
     def pasar_parametro_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
-        etiq_cadena = self.expresion_operando(operando_a)
         etiq_bucle = self.etiqueta_bucle()
-        registro = ".IX" if operando_a.cod_operando != 1 else ".IY"
+        etiq_fin_bucle = self.etiqueta_fin_bucle()
+        reg_a = self.registro_variable(operando_a)
         return (
             comentario("; Pasar parámetro tipo cadena", formato=20),
-            instruccion("MOVE", f"{etiq_cadena}, .R9", comen=f"; Copia la dir de cadena en R9"),
-            instruccion("ADD", f"#{operando_a.lugar}, {registro}"),
-            instruccion("MOVE", ".A, .R8"),
-            # bucle copia cadena
-            instruccion("MOVE", "[.R9], [.R8]", etiq=f"{etiq_bucle}:", comen="; Bucle de copia de cadena"),
-            instruccion("INC", ".R9"),
-            instruccion("INC", ".R8"),
-            instruccion("CMP", "#0, [.R9]"),
-            instruccion("BNZ", f"/{etiq_bucle}"),
-
+            instruccion("ADD", f"#{operando_a.lugar}, {reg_a}"),
+            instruccion("MOVE", ".A, .R9", comen=f"; Copia la dir de cadena en R9"),
             instruccion("ADD", f"#tam_ra_{self.gestor_ts.actual.nombre}, .IX"),
             instruccion("ADD", f"#{operando_a.despl_param}, .A"),
-            instruccion("MOVE", ".R8, [.A]"))
+            instruccion("MOVE", ".A, .R8"),
+            # bucle copia cadena
+            instruccion("CMP", "#0, [.R9]", etiq=f"{etiq_bucle}:"),
+            instruccion(f"BZ", f"/{etiq_fin_bucle}"),
+            instruccion("MOVE", "[.R9], [.R8]", comen="; Bucle de copia de cadena"),
+            instruccion("INC", ".R9"),
+            instruccion("INC", ".R8"),
+            instruccion("BR", f"/{etiq_bucle}"),
+            instruccion("MOVE", "#0, [.R8]", etiq=f"{etiq_fin_bucle}:"))
 
     def llamar_funcion(self, operador, operando_a=None, operando_b=None, resultado=None):
         etiq_funcion = self.expresion_operando(operando_a)
@@ -219,19 +255,19 @@ class JSGco:
         inst = [comentario(f"; Invoca la función {operando_a.simbolo}"),
                 instruccion("ADD", f"#tam_ra_{llamador}, .IX"),
                 instruccion("MOVE", f"#{etiq_ret}, [.A]"),
-                instruccion("ADD", f"#tam_ra_{llamador}, .IX"),
                 instruccion("MOVE", ".A, .IX"),
                 instruccion("BR", f"/{etiq_funcion}")]
         if resultado is not None:
-            destino = self.expresion_operando(resultado)
+            reg_destino = self.registro_variable(resultado)
             inst.append(instruccion("SUB", f"#tam_ra_{etiq_funcion[4:]}, #1", etiq=f"{etiq_ret}:",
                                     comen=f"; Etiqueta de retorno"))
             inst.append(instruccion("ADD", ".A, .IX"))
             inst.append(instruccion("MOVE", "[.A], .R9", comen=f"; Valor devuelto en R9"))
             inst.append(instruccion("SUB", f".IX, #tam_ra_{llamador}"))
             inst.append(instruccion("MOVE", ".A, .IX"))
+            inst.append(instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"))
             inst.append(
-                instruccion("MOVE", f".R9, {destino}", comen=f"; Valor devuelto en el dato temporal correspondiente"))
+                instruccion("MOVE", ".R9, [.A]", comen=f"; Valor devuelto en el dato temporal correspondiente"))
 
         else:
             inst.append(
@@ -245,81 +281,88 @@ class JSGco:
         etiq_ret = self.etiqueta_dir_ret()
         llamador = self.gestor_ts.actual.nombre
         etiq_bucle = self.etiqueta_bucle()
-        registro = ".IX" if resultado.cod_operando != 1 else ".IY"
+        etiq_fin_bucle = self.etiqueta_fin_bucle()
+        reg_destino = self.registro_variable(resultado)
 
-        return (comentario(f"; Invoca la función {operando_a.simbolo}"),
+        return (comentario(f"; Invoca la función {operando_a.simbolo[4:]}"),
                 instruccion("ADD", f"#tam_ra_{llamador}, .IX"),
                 instruccion("MOVE", f"#{etiq_ret}, [.A]"),
-
-                instruccion("ADD", f"#tam_ra_{llamador}, .IX"),
                 instruccion("MOVE", ".A, .IX"),
                 instruccion("BR", f"/{etiq_funcion}"),
-                instruccion("SUB", f"#tam_ra_{llamador}, #64", etiq=f"{etiq_ret}:", comen=f"; Etiqueta de retorno"),
-
+                instruccion("SUB", f"#tam_ra_{etiq_funcion[4:]}, #64", etiq=f"{etiq_ret}:",
+                            comen=f"; Etiqueta de retorno"),
                 instruccion("ADD", ".A, .IX"),
-                instruccion("MOVE", "[.A], .R9", comen=f"; Valor devuelto en R9"),
+                instruccion("MOVE", ".A, .R9", comen=f"; Dirección del valor devuelto en R9"),
                 instruccion("SUB", f".IX, #tam_ra_{llamador}"),
                 instruccion("MOVE", ".A, .IX"),
-
-                # bucle copia cadena
-                instruccion("ADD", f"#{resultado.lugar}, {registro}", comen=f"; Bucle de copia de cadena"),
+                instruccion("ADD", f"#{resultado.lugar}, {reg_destino}", comen=f"; Bucle de copia de cadena"),
                 instruccion("MOVE", ".A, .R8"),
-                instruccion("MOVE", "[.R9], [.R8]", etiq=f"{etiq_bucle}:"),
+                # bucle copia cadena
+                instruccion("CMP", "#0, [.R9]", etiq=f"{etiq_bucle}:"),
+                instruccion(f"BZ", f"/{etiq_fin_bucle}"),
+                instruccion("MOVE", "[.R9], [.R8]", comen="; Bucle de copia de cadena"),
                 instruccion("INC", ".R9"),
                 instruccion("INC", ".R8"),
-                instruccion("CMP", "#0, [.R9]"),
-                instruccion("BNZ", f"/{etiq_bucle}"))
+                instruccion("BR", f"/{etiq_bucle}"),
+                instruccion("MOVE", "#0, [.R8]", etiq=f"{etiq_fin_bucle}:"))
 
     def devolver_valor(self, operador, operando_a=None, operando_b=None, resultado=None):
         inst = []
         if resultado is not None:
-            result = self.expresion_operando(resultado)
-            inst.append(comentario(f"; Return tipo entero o lógico"))
-            inst.append(instruccion("SUB", f"#tam_ra_{self.gestor_ts.actual.nombre}, #1"))
-            inst.append(instruccion("ADD", ".A, .IX"))
-            inst.append(instruccion("MOVE", f"{result}, [.A]"))
+            reg_destino = self.registro_variable(resultado)
+            inst = [comentario(f"; Return tipo entero o lógico"),
+                    instruccion("SUB", f"#tam_ra_{self.gestor_ts.actual.nombre}, #1"),
+                    instruccion("ADD", ".A, .IX"),
+                    instruccion("MOVE", ".A, .R9"),
+                    instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"),
+                    instruccion("MOVE", "[.A], [.R9]")]
         inst.append(instruccion("BR", "[.IX]"))
         return inst
 
     def devolver_valor_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
         etiq_bucle = self.etiqueta_bucle()
-        registro = ".IX" if resultado.cod_operando != 1 else ".IY"
-
+        etiq_fin_bucle = self.etiqueta_fin_bucle()
+        reg_destino = self.registro_variable(resultado)
         return (
             comentario(f"; Return tipo cadena"),
-            instruccion("ADD", f"#{resultado.lugar}, {registro}"),
+            instruccion("ADD", f"#{resultado.lugar}, {reg_destino}"),
             instruccion("MOVE", ".A, .R9"),
             instruccion("SUB", f"#tam_ra_{self.gestor_ts.actual.nombre}, #64"),
+            instruccion("ADD", ".A, .IX"),
             instruccion("MOVE", ".A, .R8"),
-
             # bucle copia cadena
-            instruccion("MOVE", "[.R9], [.R8]", etiq=f"{etiq_bucle}:", comen=f"; Bucle de copia de cadena"),
+            instruccion("CMP", "#0, [.R9]", etiq=f"{etiq_bucle}:"),
+            instruccion(f"BZ", f"/{etiq_fin_bucle}"),
+            instruccion("MOVE", "[.R9], [.R8]", comen="; Bucle de copia de cadena"),
             instruccion("INC", ".R9"),
             instruccion("INC", ".R8"),
-            instruccion("CMP", "#0, [.R9]"),
-            instruccion("BNZ", f"/{etiq_bucle}"),
-
+            instruccion("BR", f"/{etiq_bucle}"),
+            instruccion("MOVE", "#0, [.R8]", etiq=f"{etiq_fin_bucle}:"),
             instruccion("BR", "[.IX]"))
 
     def etiqueta(self, operador, operando_a=None, operando_b=None, resultado=None):
         return instruccion("NOP", "", etiq=f"{operando_a.lugar}:")
 
     def alert_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
+        registro = self.registro_variable(operando_a)
         return (comentario("; Alert entero"),
-                instruccion("WRINT", f"{a}"))
+                instruccion("ADD", f"#{operando_a.lugar}, {registro}"),
+                instruccion("WRINT", "[.A]"))
 
     def alert_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
+        registro = self.registro_variable(operando_a)
         return (comentario("; Alert cadena"),
-                instruccion("WRSTR", f"{a}"))
+                instruccion("ADD", f"#{operando_a.lugar}, {registro}"),
+                instruccion("WRSTR", "[.A]"))
 
     def input_entero(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
+        registro = self.registro_variable(operando_a)
         return (comentario("; Input entero"),
-                instruccion("ININT", f"{a}"))
+                instruccion("ADD", f"#{operando_a.lugar}, {registro}"),
+                instruccion("ININT", "[.A]"))
 
     def input_cadena(self, operador, operando_a=None, operando_b=None, resultado=None):
-        a = self.expresion_operando(operando_a)
+        registro = self.registro_variable(operando_a)
         return (comentario("; Input cadena"),
-                instruccion("INSTR", f"{a}"))
+                instruccion("ADD", f"#{operando_a.lugar}, {registro}"),
+                instruccion("INSTR", "[.A]"))
