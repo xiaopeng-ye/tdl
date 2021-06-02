@@ -15,6 +15,7 @@ class JSGci:
         self.gco.generar_codigo_objeto(operador, operando_a=operando_a, operando_b=operando_b, resultado=resultado)
 
     def emite_global_no_init(self, var_no_declarado):
+        self.gci_file.write(f'/* Inicializa implícitamente la variable {var_no_declarado.simbolo}) */\n')
         self.gci_file.write(f'(:=, 0, , {var_no_declarado.simbolo})\n')
         reg_destino = self.gco.registro_variable(var_no_declarado)
         self.gco.global_no_init.writelines((instruccion("ADD", f"#{var_no_declarado.lugar}, {reg_destino}"),
