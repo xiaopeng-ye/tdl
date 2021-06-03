@@ -145,6 +145,7 @@ class JSParser:
         with open('parse.txt', 'w') as f:
             f.write(' '.join(lista_reglas))
         gestor_ts.imprime()
+        gci.gci_file.close()
         self.token_file.close()
         # terminar de implementar el codigo objeto
         gco.finalizar()

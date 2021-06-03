@@ -124,9 +124,15 @@ W -> ID D {
     	W.lugar := BuscaLugarTS(ID.pos);
 	else then
     	W.lugar := nuevatemp(BuscaTipoRetornoTS(ID.pos));
-  		for i := 1 to D.long
-          	emite('param', D.lugares[i]);
-        emite(W.lugar, ':=', 'call', BuscaEtiqTS(ID.pos));
+        for i := 1 to D.long
+  		    if(BuscarParametrosTS(ID.pos)[i].tipo == 'cadena') then
+          	    emite('param(cad)', D.lugares[i]);
+          	else
+          	    emite('param', G.lugares[i]);
+        if(BuscarTipoRetorno(ID.pos) == 'cadena') then
+            emite(W.lugar, ':=', 'call(cad)', BuscaEtiqTS(ID.pos));
+        else
+            emite(W.lugar, ':=', 'call', BuscaEtiqTS(ID.pos));
 }
 
 W -> ENTERO {
@@ -209,8 +215,14 @@ S -> ID {
 } G ; {
 	if(BuscarTipoTS(ID.pos) == función) then
   		for i := 1 to G.long
-          	emite('param', G.lugares[i]);
-        emite('call', BuscaEtiqTS(ID.pos));
+  		    if(BuscarParametrosTS(ID.pos)[i].tipo == 'cadena') then
+          	    emite('param(cad)', G.lugares[i]);
+          	else
+          	    emite('param', G.lugares[i]);
+        if(BuscarTipoRetorno(ID.pos) == 'cadena') then
+            emite('call(cad)', BuscaEtiqTS(ID.pos));
+        else
+            emite('call', BuscaEtiqTS(ID.pos));
 }
 
 S -> ++ ID ; {
@@ -245,7 +257,7 @@ S -> alert ( E ) ; {
 }
 
 S -> return X ; {
-	if(X.lugar != null) then //cambiar
+	if(X.tipo != 'vacio') then
 	    emite('return', X.lugar);
 	else
 	    emite('return');
