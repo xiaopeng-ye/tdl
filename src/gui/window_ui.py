@@ -64,7 +64,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Procesadores de Lenguajes"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Traductores de Lenguajes"))
         self.QRuta.setText(_translate("MainWindow", "Ruta del código:"))
         self.BAceptar.setText(_translate("MainWindow", "Aceptar"))
         self.BBuscar.setText(_translate("MainWindow", "Buscar..."))

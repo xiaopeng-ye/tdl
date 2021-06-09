@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from gci import Operando
 
 
 class GestorTablaSimbolo:
@@ -9,6 +10,8 @@ class GestorTablaSimbolo:
         self.actual = self.global_
         self.zona_decl = False
         self.indice = -1
+        self.num_etiq = 0
+        self.cast_tam = {'logico': 1, 'cadena': 64, 'entero': 1, 'vacio': 0}
 
     def crea_tabla(self, indice):
         self.actual = TablaSimbolo(self.global_.get_simbolo(indice).lexema)
@@ -43,13 +46,13 @@ class GestorTablaSimbolo:
     def aniadir_var_atributos_ts_global(self, indice, tipo, tam):
         simbolo = self.global_.get_simbolo(indice)
         simbolo['tipo'] = tipo
-        simbolo['despl'] = self.actual.despl
-        self.actual.despl += tam
+        simbolo['despl'] = self.global_.despl
+        self.global_.despl += tam
 
     def aniadir_func_atributos_ts(self, indice, tipo_param, tipo_retorno):
         simbolo = self.global_.get_simbolo(indice)
         simbolo['tipo'] = 'funcion'
-        simbolo['etiqFuncion'] = simbolo.lexema
+        simbolo['etiqFuncion'] = f"fun_{simbolo.lexema}"
         simbolo['tipoRetorno'] = tipo_retorno
 
         if tipo_param != 'vacio':
@@ -61,6 +64,31 @@ class GestorTablaSimbolo:
     def buscar_simbolo_ts(self, indice):
         simbolo = self.actual.get_simbolo(indice)
         return self.global_.get_simbolo(indice) if simbolo is None else simbolo
+
+    def nueva_temp(self, tipo):
+        self.indice += 1
+        simbolo = self.actual.insertar_temp(self.indice)
+        simbolo['tipo'] = tipo
+        simbolo['despl'] = self.actual.despl
+        self.actual.despl += self.cast_tam[tipo]
+        return Operando(2, simbolo['despl'], simbolo.lexema)
+
+    def nueva_etiq(self):
+        self.num_etiq += 1
+        etiq = 'etiq' + str(self.num_etiq)
+        return Operando(11, etiq, etiq)
+
+    def tamanio_ra_global(self):
+        return 1 + self.global_.despl
+
+    def tamanio_ra(self, tabla):
+        if tabla.nombre == 'global':
+            return 1 + self.global_.despl
+        simbolo = self.global_.simbolos_dict[tabla.nombre]
+        return 1 + tabla.despl + self.cast_tam[simbolo['tipoRetorno']]
+
+    def es_global(self, indice):
+        return self.global_.get_simbolo(indice) is not None
 
     def imprime(self):
         with open('tabla_simbolos.txt', 'w') as f:
@@ -76,6 +104,7 @@ class TablaSimbolo:
         self.simbolos_dict = OrderedDict()
         self.simbolos_list = {}
         self.despl = 0
+        self.num_temp = 1
 
     @property
     def nombre(self):
@@ -85,6 +114,14 @@ class TablaSimbolo:
         simbolo = Simbolo(indice, lexema)
         self.simbolos_dict[lexema] = simbolo
         self.simbolos_list[indice] = simbolo
+
+    def insertar_temp(self, indice):
+        lexema = f'~temp{self.num_temp}'
+        self.num_temp += 1
+        simbolo = Simbolo(indice, lexema)
+        self.simbolos_dict[lexema] = simbolo
+        self.simbolos_list[indice] = simbolo
+        return simbolo
 
     def posicion_lexema(self, lexema):
         return self.simbolos_dict[lexema].indice if lexema in self.simbolos_dict else None
